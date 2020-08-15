@@ -4,7 +4,7 @@ using System.IO;
 using System.Text;
 using System.Numerics;
 using System.Linq;
-using System.Diagnostics;
+using System.Globalization;
 
 namespace KclLibrary
 {
@@ -113,7 +113,7 @@ namespace KclLibrary
         /// <param name="stream">The <see cref="Stream"/> to load the data from.</param>
         /// <param name="leaveOpen"><c>true</c> to leave <paramref name="stream"/> open after loading the instance.
         /// </param>
-        public void Load(Stream stream, bool leaveOpen = false)
+        public void Load(Stream stream)
         {
             DebugLogger.WriteLine($"Loading obj file....");
 
@@ -124,12 +124,13 @@ namespace KclLibrary
 
             HashSet<int> faceHashes = new HashSet<int>();
 
-            using (StreamReader reader = new StreamReader(stream, Encoding.Default, true, 81920, leaveOpen))
+            using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
             {
                 List<Vector3> Positions = new List<Vector3>();
                 List<Vector2> TexCoords = new List<Vector2>();
                 List<Vector3> Normals = new List<Vector3>();
 
+                var enusculture = new CultureInfo("en-US");
                 string currentMaterial = null;
                 while (!reader.EndOfStream)
                 {
@@ -149,14 +150,16 @@ namespace KclLibrary
                             Meshes.Add(currentMesh);
                             continue;
                         case "v":
-                            Positions.Add(new Vector3(Single.Parse(args[1]), Single.Parse(args[2]),
-                                Single.Parse(args[3])));
+                            Positions.Add(new Vector3(
+                                Single.Parse(args[1], enusculture), 
+                                Single.Parse(args[2], enusculture),
+                                Single.Parse(args[3], enusculture)));
                             continue;
                         case "vt":
-                            TexCoords.Add(new Vector2(Single.Parse(args[1]), Single.Parse(args[2])));
+                            TexCoords.Add(new Vector2(Single.Parse(args[1], enusculture), Single.Parse(args[2], enusculture)));
                             continue;
                         case "vn":
-                            Normals.Add(new Vector3(Single.Parse(args[1]), Single.Parse(args[2]),
+                            Normals.Add(new Vector3(Single.Parse(args[1], enusculture), Single.Parse(args[2], enusculture),
                                 Single.Parse(args[3])));
                             continue;
                         case "f":
