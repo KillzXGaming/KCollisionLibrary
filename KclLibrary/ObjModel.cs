@@ -177,7 +177,7 @@ namespace KclLibrary
                                 {
                                     face.Vertices[i].TexCoord = TexCoords[Int32.Parse(vertexArgs[1]) - 1];
                                 }
-                                if (vertexArgs.Length > 2)
+                                if (vertexArgs.Length > 2 && vertexArgs[2] != String.Empty)
                                 {
                                     face.Vertices[i].Normal = Normals[Int32.Parse(vertexArgs[2]) - 1];
                                 }
@@ -303,7 +303,7 @@ namespace KclLibrary
                     writer.WriteLine($"o {mesh.Name}");
                     foreach (var face in mesh.Faces) {
                         foreach (var v in face.Vertices) {
-                            if (!positons.Contains(v.Position))positons.Add(v.Position);
+                            if (!positons.Contains(v.Position)) positons.Add(v.Position);
                             if (!normals.Contains(v.Normal)) normals.Add(v.Normal);
                             if (!texCoords.Contains(v.TexCoord)) texCoords.Add(v.TexCoord);
                         }
@@ -333,6 +333,9 @@ namespace KclLibrary
                         string faceData = "f";
                         foreach (var v in face.Vertices)
                         {
+                            if (positons.IndexOf(v.Position) == -1 || normals.IndexOf(v.Normal) == -1)
+                                continue;
+
                             int positionIndex = positionShift + positons.IndexOf(v.Position);
                             int normalIndex = normalShift + normals.IndexOf(v.Normal);
                             faceData += " " + string.Join("//", new string[] { positionIndex.ToString(), normalIndex.ToString() });
