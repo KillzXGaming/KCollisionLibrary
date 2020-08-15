@@ -296,16 +296,28 @@ namespace KclLibrary
                 int normalShift = 1;
                 foreach (var mesh in Meshes)
                 {
+                    Dictionary<int, int> positionHashTable = new Dictionary<int, int>();
+                    Dictionary<int, int> normalHashTable = new Dictionary<int, int>();
+
                     List<Vector3> positons = new List<Vector3>();
                     List<Vector3> normals = new List<Vector3>();
-                    List<Vector2> texCoords = new List<Vector2>();
 
                     writer.WriteLine($"o {mesh.Name}");
                     foreach (var face in mesh.Faces) {
                         foreach (var v in face.Vertices) {
-                            if (!positons.Contains(v.Position)) positons.Add(v.Position);
-                            if (!normals.Contains(v.Normal)) normals.Add(v.Normal);
-                            if (!texCoords.Contains(v.TexCoord)) texCoords.Add(v.TexCoord);
+                            int positionHash = v.Position.GetHashCode();
+                            int normalHash = v.Normal.GetHashCode();
+                            int texCoordHash = v.TexCoord.GetHashCode();
+
+                            if (!positionHashTable.ContainsKey(positionHash)) {
+                                positionHashTable.Add(positionHash, positons.Count);
+                                positons.Add(v.Position);
+                            }
+
+                            if (!normalHashTable.ContainsKey(normalHash)) {
+                                normalHashTable.Add(normalHash, normals.Count);
+                                normals.Add(v.Normal);
+                            }
                         }
                     }
 
@@ -313,8 +325,6 @@ namespace KclLibrary
                         writer.WriteLine($"v {pos.X} {pos.Y} {pos.Z}");
                     foreach (var nrm in normals)
                         writer.WriteLine($"vn {nrm.X} {nrm.Y} {nrm.Z}");
-                    foreach (var texCoord in texCoords)
-                        writer.WriteLine($"vt {texCoord.X} {texCoord.Y}");
 
                     string currentMaterial = "";
                     foreach (var face in mesh.Faces.OrderBy(x => x.Material))
@@ -333,11 +343,8 @@ namespace KclLibrary
                         string faceData = "f";
                         foreach (var v in face.Vertices)
                         {
-                            if (positons.IndexOf(v.Position) == -1 || normals.IndexOf(v.Normal) == -1)
-                                continue;
-
-                            int positionIndex = positionShift + positons.IndexOf(v.Position);
-                            int normalIndex = normalShift + normals.IndexOf(v.Normal);
+                            int positionIndex = positionShift + positionHashTable[v.Position.GetHashCode()];
+                            int normalIndex = normalShift + normalHashTable[v.Normal.GetHashCode()];
                             faceData += " " + string.Join("//", new string[] { positionIndex.ToString(), normalIndex.ToString() });
                         }
                         writer.WriteLine(faceData);
