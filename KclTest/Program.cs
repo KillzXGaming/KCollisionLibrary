@@ -14,22 +14,20 @@ namespace KclTest
     {
         static void Main(string[] args)
         {
+            //MKWII Settings
             var settings = new CollisionImportSettings()
             {
                 //Octree Settings
                 PaddingMax = new System.Numerics.Vector3(400, 400, 400),
                 PaddingMin = new System.Numerics.Vector3(-400, -400, -400),
                 MaxRootSize = 2048,
-                MinRootSize = 128,
                 MinCubeSize = 512,
                 MaxTrianglesInCube = 30,
+                CubeBlow = 400,
                 //Model Settings
-                PrisimThickness = 30,
-                SphereRadius = 25,
+                PrisimThickness = 300,
+                SphereRadius = 250,
             };
-
-         //   ReimportCollison("courseY.kcl", FileVersion.Version2, true, settings);
-
             ReimportCollison("course.kcl", FileVersion.VersionWII, true, settings);
             return;
         }

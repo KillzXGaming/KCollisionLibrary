@@ -69,11 +69,11 @@ namespace KclLibrary
         /// <param name="maxTrianglesInCube">The maximum number of triangles to sort into this node.</param>
         /// <param name="minCubeSize">The minimum size a cube can be subdivided to.</param>
         internal PolygonOctree(Dictionary<ushort, Triangle> triangles, Vector3 cubePosition, float cubeSize,
-            int maxTrianglesInCube, int maxCubeSize, int minCubeSize, int maxDepth, int depth = 0) : base(0)
+            int maxTrianglesInCube, int maxCubeSize, int minCubeSize, int cubeBlow, int maxDepth, int depth = 0) : base(0)
         {
             //Adjust the cube sizes based on EFE's method
             Vector3 cubeCenter = cubePosition + new Vector3(cubeSize / 2f, cubeSize / 2f, cubeSize / 2f);
-            float newsize = cubeSize + 50;
+            float newsize = cubeSize + cubeBlow;
             Vector3 newPosition = cubeCenter - new Vector3(newsize / 2f, newsize / 2f, newsize / 2f);
 
             // Go through all triangles and remember them if they overlap with the region of this cube.
@@ -99,7 +99,7 @@ namespace KclLibrary
                         for (int x = 0; x < 2; x++) {
                             Vector3 childCubePosition = cubePosition + childCubeSize * new Vector3(x, y, z);
                             Children[i++] = new PolygonOctree(containedTriangles, childCubePosition, childCubeSize,
-                                maxTrianglesInCube, maxCubeSize, minCubeSize, maxDepth, depth + 1);
+                                maxTrianglesInCube, maxCubeSize, minCubeSize, cubeBlow, maxDepth, depth + 1);
                         }
                     }
                 }

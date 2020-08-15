@@ -143,7 +143,7 @@ namespace KclLibrary
                         Vector3 cubePosition = minCoordinate + ((float)cubeSize) * new Vector3(x, y, z);
                         PolygonOctreeRoots[index++] = new PolygonOctree(triangles, cubePosition, cubeSize,
                             settings.MaxTrianglesInCube, settings.MaxCubeSize, 
-                            settings.MinCubeSize, settings.MaxOctreeDepth);
+                            settings.MinCubeSize, settings.CubeBlow, settings.MaxOctreeDepth);
                     }
                 }
             }
