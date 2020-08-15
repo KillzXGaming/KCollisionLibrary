@@ -64,7 +64,7 @@ namespace KclLibrary
             }
 
             return null;
-        }   
+        }
 
         internal static ushort[] searchBlock(KCLModel model,  int x, int y, int z)
         {

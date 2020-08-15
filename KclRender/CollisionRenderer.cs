@@ -40,25 +40,35 @@ namespace CollisionGUI
                 in vec3 normal;
                 in vec3 position;
                 in vec4 color;
+                in float vertexID;
+
+                uniform float pickedFace;
 
 				out vec4 FragColor;
 
 				void main(){
+                    vec4 highlighted = vec4(1);
+                    if (vertexID == pickedFace) {
+                          highlighted = vec4(1,0,0,1);
+                    }
+
                     vec3 displayNormal = (normal.xyz * 0.5) + 0.5;
                     float halfLambert = max(displayNormal.y,0.5);
 
-                    FragColor = vec4(vec3(color.rgb * halfLambert), 1.0f);
+                    FragColor = vec4(vec3(color.rgb * halfLambert), 1.0f) * highlighted;
 				}");
 
             var solidColorVert = new VertexShader(
           @"#version 330
-                in vec3 vPosition;
-                in vec3 vNormal;
-                in vec4 vColor;
+                layout(location = 0) in vec3 vPosition;
+                layout(location = 1) in vec3 vNormal;
+                layout(location = 2) in vec4 vColor;
+                layout(location = 3) in float vIndex;
 
                 out vec3 normal;
                 out vec3 position;
                 out vec4 color;
+                out float vertexID;
 
 	            uniform mat4 mtxMdl;
 				uniform mat4 mtxCam;
@@ -67,6 +77,7 @@ namespace CollisionGUI
                     normal = vNormal;
 	                position = vPosition;
 	                color = vColor;
+	                vertexID = vIndex;
 
                     gl_Position = mtxCam * mtxMdl * vec4(vPosition.xyz, 1.0);
 				}");
@@ -83,9 +94,10 @@ namespace CollisionGUI
             vaoBuffer = GL.GenBuffer();
 
             vao = new VertexArrayObject(vaoBuffer);
-            vao.AddAttribute(0, 3, VertexAttribPointerType.Float, false, 28, 0);
-            vao.AddAttribute(1, 3, VertexAttribPointerType.Float, false, 28, 12);
-            vao.AddAttribute(2, 4, VertexAttribPointerType.UnsignedByte, true, 28, 24);
+            vao.AddAttribute(0, 3, VertexAttribPointerType.Float, false, 32, 0);
+            vao.AddAttribute(1, 3, VertexAttribPointerType.Float, false, 32, 12);
+            vao.AddAttribute(2, 4, VertexAttribPointerType.UnsignedByte, true, 32, 24);
+            vao.AddAttribute(3, 1, VertexAttribPointerType.Float, false, 32, 28);
             vao.Initialize(control);
 
             UpdateVertexData();
@@ -99,7 +111,7 @@ namespace CollisionGUI
         {
             List<uint> indexList = new List<uint>();
             List<float> vertexData = new List<float>();
-            uint index = 0;
+            uint faceIndex = 0;
             foreach (var model in KclFile.Models)
             {
                 foreach (var face in model.Prisims)
@@ -116,8 +128,6 @@ namespace CollisionGUI
                         vertexData.Add(triangle.Normal.Z);
 
                         Vector4 color = new Vector4(255, 255, 255,255);
-                        if (model.HitPrisims.Contains(face))
-                            color = new Vector4(255, 0, 0, 255);
 
                         vertexData.Add(BitConverter.ToSingle(new byte[4]
                         {
@@ -126,16 +136,15 @@ namespace CollisionGUI
                                 (byte)color.Z,
                                 (byte)color.W
                         }, 0));
-
-                        indexList.Add(index++);
+                        vertexData.Add(faceIndex);
                     }
+                    faceIndex++;
                 }
             }
 
-            uint[] indices = indexList.ToArray();
             float[] bufferData = vertexData.ToArray();
 
-            IndicesLength = indices.Length;
+            IndicesLength = (int)faceIndex * 3;
 
             GL.BindBuffer(BufferTarget.ArrayBuffer, vaoBuffer);
             GL.BufferData(BufferTarget.ArrayBuffer, bufferData.Length * 4, bufferData, BufferUsageHint.StaticDraw);
@@ -168,20 +177,27 @@ namespace CollisionGUI
 
         private void DrawOctrees(ref Matrix4 mvp)
         {
-            var boundings = KclFile.Models[0].GetOctreeBoundings();
-            var hitOctrees = KclFile.Models[0].HitOctrees;
-            foreach (var bounding in boundings)
+            foreach (var model in KclFile.Models)
             {
-                foreach (var octree in hitOctrees)
+                if (model.HitOctrees.Count > 0)
                 {
-                    if (octree == bounding.Octree)
+                    var boundings = model.GetOctreeBoundings();
+                    var hitOctrees = model.HitOctrees;
+                    foreach (var bounding in boundings)
                     {
-                        Vector3 pos = new Vector3(bounding.Position.X, bounding.Position.Y, bounding.Position.Z);
-                        Vector3 bsize = new Vector3(bounding.Size);
-                        DrawableBoundingBox.DrawBoundingBox(mvp, bsize, pos + bsize, System.Drawing.Color.Red);
+                        foreach (var octree in hitOctrees)
+                        {
+                            if (octree == bounding.Octree)
+                            {
+                                Vector3 pos = new Vector3(bounding.Position.X, bounding.Position.Y, bounding.Position.Z);
+                                Vector3 bsize = new Vector3(bounding.Size);
+                                DrawableBoundingBox.DrawBoundingBox(mvp, bsize, pos + bsize, System.Drawing.Color.Red);
+                            }
+                        }
                     }
                 }
             }
+
             return;
 
             var octreeMax = KclFile.MaxCoordinate;
@@ -222,6 +238,14 @@ namespace CollisionGUI
         private void Draw(GL_ControlBase control)
         {
             GL.Disable(EnableCap.CullFace);
+
+            Shader.SetFloat("pickedFace", -1);
+            foreach (var model in KclFile.Models)
+            {
+                foreach (var prisim in model.HitPrisims) {
+                    Shader.SetFloat("pickedFace", prisim.GlobalIndex);
+                }
+            }
 
             vao.Enable(control);
             vao.Use(control);

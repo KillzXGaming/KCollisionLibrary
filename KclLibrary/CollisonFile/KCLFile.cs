@@ -44,7 +44,7 @@ namespace KclLibrary
         /// <param name="loadOctree"><c>true</c> to also load the octree referencing models.</param>
         public KCLFile(string fileName) : base()
         {
-            Transform = Matrix4x4.CreateScale(new Vector3(0.001f, 0.001f, 0.001f));
+            Transform = Matrix4x4.CreateScale(new Vector3(0.01f, 0.01f, 0.01f));
 
             using (FileStream stream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read)) {
                 Load(stream);
@@ -216,6 +216,9 @@ namespace KclLibrary
             MinCoordinate = minCoordinate + settings.PaddingMin;
             MaxCoordinate = maxCoordinate + settings.PaddingMax;
 
+            DebugLogger.WriteLine($"MinCoordinate: {MinCoordinate}");
+            DebugLogger.WriteLine($"MaxCoordinate: {MaxCoordinate}");
+
             // Compute square cube size of the world, and with it the coordinate shift for use with the model octree.
             Vector3 size = MaxCoordinate - MinCoordinate;
             int worldLengthExp = Maths.GetNext2Exponent(Math.Min(Math.Min(size.X, size.Y), size.Z));
@@ -284,21 +287,33 @@ namespace KclLibrary
                 1 << (int)CoordinateShift.Y,
                 1 << (int)CoordinateShift.Z);
 
+            var block = SearchModelBlock(ModelOctreeRoot.Children, point, MinCoordinate, boxSize);
+            if (block != null && block.ModelIndex != null)
+                return Models[(int)block.ModelIndex].CheckHit(point);
+
+            return null;
+        }
+
+        private ModelOctreeNode SearchModelBlock(ModelOctreeNode[] children, Vector3 point, Vector3 position, Vector3 boxSize)
+        {
             int blockIdx = 0;
             for (int z = 0; z < 2; z++) {
                 for (int y = 0; y < 2; y++) {
                     for (int x = 0; x < 2; x++) {
-                        Vector3 pos = MinCoordinate + boxSize * new Vector3(x, y, z);
-                        Vector3 min = pos - boxSize / 2f;
-                        Vector3 max = pos + boxSize / 2f;
+                        Vector3 cubePosition = position + boxSize * new Vector3(x, y, z);
+                        Vector3 min = cubePosition - boxSize / 2f;
+                        Vector3 max = cubePosition + boxSize / 2f;
                         bool inCube = (min.X < point.X && point.X < max.X &&
                                        min.Y < point.Y && point.Y < max.Y &&
                                        min.Z < point.Z && point.Z < max.Z);
+
                         if (inCube)
                         {
-                            var modelOctree = ModelOctreeRoot.Children[blockIdx];
-                            if (modelOctree.ModelIndex != null)
-                                return Models[(int)modelOctree.ModelIndex].CheckHit(point);
+                            Console.WriteLine($"inCube {blockIdx}");
+                            if (children[blockIdx].Children != null)
+                                return SearchModelBlock(children[blockIdx].Children, point, cubePosition, boxSize / 2f);
+                            else
+                                return children[blockIdx];
                         }
                         blockIdx++;
                     }

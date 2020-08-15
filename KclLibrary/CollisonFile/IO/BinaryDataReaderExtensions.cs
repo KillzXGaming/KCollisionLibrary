@@ -27,6 +27,8 @@ namespace KclLibrary
             for (int i = 0; i < count; i++) {
                 values[i] = new KclPrisim();
                 values[i].Read(self, version);
+                if (version != FileVersion.Version2) //Manually set the global index for older versions
+                    values[i].GlobalIndex = (ushort)i;
             }
             return values;
         }
