@@ -14,21 +14,25 @@ namespace KclTest
     {
         static void Main(string[] args)
         {
+            var obj = new ObjModel("course.obj");
+            var kcl = new KCLFile(obj.ToTriangles(), FileVersion.Version2, true);
+            kcl.Save("course.test.kcl");
+
             //MKWII Settings
             var settings = new CollisionImportSettings()
             {
                 //Octree Settings
-                PaddingMax = new System.Numerics.Vector3(400, 400, 400),
-                PaddingMin = new System.Numerics.Vector3(-400, -400, -400),
+                PaddingMax = new System.Numerics.Vector3(250, 250, 250),
+                PaddingMin = new System.Numerics.Vector3(-250, -250, -250),
                 MaxRootSize = 2048,
                 MinCubeSize = 512,
-                MaxTrianglesInCube = 30,
-                CubeBlow = 400,
+                MaxTrianglesInCube = 60,
                 //Model Settings
                 PrisimThickness = 300,
                 SphereRadius = 250,
             };
-            ReimportCollison("course.kcl", FileVersion.VersionWII, true, settings);
+            ReimportCollison("CityWorldHomeBuilding022.kcl", FileVersion.Version2, false);
+            ReimportCollison("course.kcl", FileVersion.Version2, true);
             return;
         }
 
@@ -77,20 +81,15 @@ namespace KclTest
             var kcl = new KCLFile(fileName);
             Console.WriteLine($"Smallest Cube Size {kcl.Models[0].GetMinCubeSize()}");
             Console.WriteLine($"Max Tri {kcl.Models[0].GetMaxTriangleCount()}");
-            kcl.Save($"{fileName}.RB.kcl");
+            Console.WriteLine($"Padding Size {kcl.Models[0].GetCoordinatePadding()}");
+            Console.WriteLine($"Depth {kcl.Models[0].GetMaxOctreeDepth()}");
 
             var obj = kcl.CreateGenericModel();
+            obj.Save($"{fileName}.obj");
+
             var triangles = obj.ToTriangles();
 
-            Stopwatch stopwatch = new Stopwatch();
-            stopwatch.Start();
-
             kcl = new KCLFile(triangles, version, bigEndian, settings);
-
-            stopwatch.Stop();
-
-            Console.WriteLine("Time elapsed: {0}", stopwatch.Elapsed);
-
             kcl.Save($"{fileName}.new.kcl");
         }
     }

@@ -134,6 +134,10 @@ namespace KclLibrary
             // Generate the root nodes, which are square cubes required to cover all of the model.
             PolygonOctreeRoots = new PolygonOctree[cubeCounts.X * cubeCounts.Y * cubeCounts.Z];
 
+
+            int cubeBlow = SphereRadius > 0 ? (int)(SphereRadius * 2) : 50;
+
+            DebugLogger.WriteLine($"Octree Distance Bias {cubeBlow}");
             DebugLogger.WriteLine($"Creating Octrees {cubeCounts}");
 
             int index = 0;
@@ -143,7 +147,7 @@ namespace KclLibrary
                         Vector3 cubePosition = minCoordinate + ((float)cubeSize) * new Vector3(x, y, z);
                         PolygonOctreeRoots[index++] = new PolygonOctree(triangles, cubePosition, cubeSize,
                             settings.MaxTrianglesInCube, settings.MaxCubeSize, 
-                            settings.MinCubeSize, settings.CubeBlow, settings.MaxOctreeDepth);
+                            settings.MinCubeSize, cubeBlow, settings.MaxOctreeDepth);
                     }
                 }
             }
@@ -195,7 +199,7 @@ namespace KclLibrary
         /// <summary>
         /// Gets or sets the thickness of the prisims.
         /// </summary>
-        public float SphereRadius { get; set; }
+        public float SphereRadius { get; set; } = 1f;
 
         /// <summary>
         /// Gets the current file version to use in the binary file.
@@ -268,6 +272,55 @@ namespace KclLibrary
                 minCubeSize = Math.Min(minCubeSize, size);
             }
             return minCubeSize;
+        }
+
+        /// <summary>
+        /// Gets the max amount of octree depth used within the tree.
+        /// </summary>
+        public int GetMaxOctreeDepth()
+        {
+            int maxDepth = int.MinValue;
+
+            Vector3 cubeCounts = new Vector3(
+                  (~(int)CoordinateMask.X >> (int)CoordinateShift.X) + 1,
+                  ((~(int)CoordinateMask.Y >> (int)CoordinateShift.X) + 1),
+                  ((~(int)CoordinateMask.Z >> (int)CoordinateShift.X) + 1));
+
+            int cubeSize = 1 << (int)CoordinateShift.X;
+
+            int index = 0;
+            for (int z = 0; z < cubeCounts.Z; z++)
+            {
+                for (int y = 0; y < cubeCounts.Y; y++)
+                {
+                    for (int x = 0; x < cubeCounts.X; x++)
+                    {
+                        Vector3 cubePosition = MinCoordinate + ((float)cubeSize) * new Vector3(x, y, z);
+                        maxDepth = Math.Max(maxDepth, GetPolygonOctreeDepth(PolygonOctreeRoots[index++],
+                            cubePosition, (float)cubeSize));
+                    }
+                }
+            }
+            return maxDepth;
+        }
+
+        public Vector3 GetCoordinatePadding()
+        {
+            // Transfer the faces to collision faces and find the smallest and biggest coordinates.
+            Vector3 minCoordinate = new Vector3(Single.MaxValue, Single.MaxValue, Single.MaxValue);
+            Vector3 maxCoordinate = new Vector3(Single.MinValue, Single.MinValue, Single.MinValue);
+
+            for (int i = 0; i < Positions.Count; i++)
+            {
+                // Get the position vectors and find the smallest and biggest coordinates.
+                minCoordinate.X = Math.Min(Positions[i].X, minCoordinate.X);
+                minCoordinate.Y = Math.Min(Positions[i].Y, minCoordinate.Y);
+                minCoordinate.Z = Math.Min(Positions[i].Z, minCoordinate.Z);
+                maxCoordinate.X = Math.Max(Positions[i].X, maxCoordinate.X);
+                maxCoordinate.Y = Math.Max(Positions[i].Y, maxCoordinate.Y);
+                maxCoordinate.Z = Math.Max(Positions[i].Z, maxCoordinate.Z);
+            }
+            return MinCoordinate - minCoordinate;
         }
 
         /// <summary>
@@ -538,6 +591,27 @@ namespace KclLibrary
                     }
                 }
             }
+        }
+
+        private int GetPolygonOctreeDepth(PolygonOctree octree, Vector3 cubePosition, float cubeSize, int depth = 0)
+        {
+            if (octree.Children != null)
+            {
+                float childCubeSize = cubeSize / 2f;
+                int i = 0;
+                for (int z = 0; z < 2; z++)
+                {
+                    for (int y = 0; y < 2; y++)
+                    {
+                        for (int x = 0; x < 2; x++)
+                        {
+                            Vector3 childCubePosition = cubePosition + childCubeSize * new Vector3(x, y, z);
+                            return GetPolygonOctreeDepth(octree.Children[i++], childCubePosition, childCubeSize, depth + 1);
+                        }
+                    }
+                }
+            }
+            return depth;
         }
 
         public class OctreeBounding

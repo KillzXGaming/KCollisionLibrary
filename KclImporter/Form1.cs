@@ -91,25 +91,35 @@ namespace KclImporter
                 }
 
                 var kcl = new KCLFile(triangles, version, endianness);
-
-                window.Invoke((MethodInvoker)delegate
+                if (window.InvokeRequired)
                 {
-                    SaveFileDialog sfd = new SaveFileDialog();
-                    sfd.Filter = "Supported Formats|*.kcl;";
-                    sfd.FileName = Path.GetFileNameWithoutExtension(fileName);
-                    if (sfd.ShowDialog() == DialogResult.OK) {
-                        kcl.Save(sfd.FileName);
-
-                        if (form.AttributeByml != null)
-                        {
-                            File.WriteAllBytes($"{sfd.FileName.Replace(".kcl", "")}Attribute.byml", ByamlFile.SaveN(form.AttributeByml));
-                        }
-                    }
-
-                    window?.Close();
-                });
+                    window.Invoke((MethodInvoker)delegate {
+                        SaveKCL(kcl, fileName, form.AttributeByml);
+                        window.Close();
+                    });
+                }
+                else {
+                    SaveKCL(kcl, fileName, form.AttributeByml);
+                    window.Close();
+                }
             }));
             Thread.Start();
+        }
+
+        private void SaveKCL(KCLFile kcl, string fileName, BymlFileData AttributeByml)
+        {
+            SaveFileDialog sfd = new SaveFileDialog();
+            sfd.Filter = "Supported Formats|*.kcl;";
+            sfd.FileName = Path.GetFileNameWithoutExtension(fileName);
+            if (sfd.ShowDialog() == DialogResult.OK)
+            {
+                kcl.Save(sfd.FileName);
+
+                if (AttributeByml != null)
+                {
+                    File.WriteAllBytes($"{sfd.FileName.Replace(".kcl", "")}Attribute.byml", ByamlFile.SaveN(AttributeByml));
+                }
+            }
         }
 
         private void btnExport_Click(object sender, EventArgs e)

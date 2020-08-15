@@ -46,10 +46,6 @@ namespace KclLibrary
         /// </summary>
         public float SphereRadius = 25;
         /// <summary>
-        /// The cube blowup size for sizing up octree boundries.
-        /// </summary>
-        public int CubeBlow = 50;
-        /// <summary>
         /// The min amount of padding to use for the collison boundings.
         /// </summary>
         public Vector3 PaddingMin = new Vector3(-50, -50, -50);
