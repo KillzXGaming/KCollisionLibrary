@@ -95,6 +95,9 @@ namespace KclLibrary
                 prisimList.Add(face);
             }
 
+            positionHashTable.Clear();
+            normalHashTable.Clear();
+
             //No triangles found to intersect the current box, return.
             if (prisimList.Count == 0) return;
 
