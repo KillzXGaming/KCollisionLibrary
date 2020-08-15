@@ -31,6 +31,9 @@ namespace KclLibrary
             PrisimThickness = settings.PrisimThickness;
             SphereRadius = settings.SphereRadius;
 
+            Dictionary<int, int> positionHashTable = new Dictionary<int, int>();
+            Dictionary<int, int> normalHashTable = new Dictionary<int, int>();
+
             ushort triindex = 0;
             for (int i = 0; i < triangleList.Count; i++)
             {
@@ -73,11 +76,11 @@ namespace KclLibrary
                 //Create a KCL prisim
                 KclPrisim face = new KclPrisim()
                 {
-                    PositionIndex = (ushort)IndexOfVertex(triangle.Vertices[0], Positions),
-                    DirectionIndex = (ushort)IndexOfVertex(direction, Normals),
-                    Normal1Index = (ushort)IndexOfVertex(normalA, Normals),
-                    Normal2Index = (ushort)IndexOfVertex(normalB, Normals),
-                    Normal3Index = (ushort)IndexOfVertex(normalC, Normals),
+                    PositionIndex = (ushort)IndexOfVertex(triangle.Vertices[0], Positions, positionHashTable),
+                    DirectionIndex = (ushort)IndexOfVertex(direction, Normals, normalHashTable),
+                    Normal1Index = (ushort)IndexOfVertex(normalA, Normals, normalHashTable),
+                    Normal2Index = (ushort)IndexOfVertex(normalB, Normals, normalHashTable),
+                    Normal3Index = (ushort)IndexOfVertex(normalC, Normals, normalHashTable),
                     GlobalIndex = baseTriCount + (uint)prisimList.Count,
                     CollisionFlags = triangle.Attribute,
                 };
@@ -131,9 +134,12 @@ namespace KclLibrary
             DebugLogger.WriteLine($"Creating Octrees {cubeCounts}");
 
             int index = 0;
-            for (int z = 0; z < cubeCounts.Z; z++) {
-                for (int y = 0; y < cubeCounts.Y; y++) {
-                    for (int x = 0; x < cubeCounts.X; x++) {
+            for (int z = 0; z < cubeCounts.Z; z++)
+            {
+                for (int y = 0; y < cubeCounts.Y; y++)
+                {
+                    for (int x = 0; x < cubeCounts.X; x++)
+                    {
                         Vector3 cubePosition = minCoordinate + ((float)cubeSize) * new Vector3(x, y, z);
                         PolygonOctreeRoots[index++] = new PolygonOctree(triangles, cubePosition, cubeSize,
                             settings.MaxTrianglesInCube, settings.MinCubeSize);
@@ -220,7 +226,8 @@ namespace KclLibrary
             return new Triangle(A, B, C);
         }
 
-        public KCLHit CheckHit(Vector3 point) {
+        public KCLHit CheckHit(Vector3 point)
+        {
             HitPrisims.Clear();
             var hit = CollisionHandler.CheckPoint(this, point, 1, 1);
             return hit;
@@ -362,7 +369,8 @@ namespace KclLibrary
                  * ((~(int)CoordinateMask.Z >> (int)CoordinateShift.X) + 1);
 
             PolygonOctreeRoots = new PolygonOctree[nodeCount];
-            for (int i = 0; i < nodeCount; i++) {
+            for (int i = 0; i < nodeCount; i++)
+            {
                 PolygonOctreeRoots[i] = new PolygonOctree(reader, modelPosition + octreeOffset, version);
             }
         }
@@ -522,9 +530,12 @@ namespace KclLibrary
             {
                 float childCubeSize = cubeSize / 2f;
                 int i = 0;
-                for (int z = 0; z < 2; z++) {
-                    for (int y = 0; y < 2; y++) {
-                        for (int x = 0; x < 2; x++) {
+                for (int z = 0; z < 2; z++)
+                {
+                    for (int y = 0; y < 2; y++)
+                    {
+                        for (int x = 0; x < 2; x++)
+                        {
                             Vector3 childCubePosition = cubePosition + childCubeSize * new Vector3(x, y, z);
                             GetOctreeBounding(boundings, octree.Children[i++], childCubePosition, childCubeSize);
                         }
@@ -585,15 +596,16 @@ namespace KclLibrary
             return count;
         }
 
-        private int IndexOfVertex(Vector3 value, List<Vector3> values)
+        private int IndexOfVertex(Vector3 value, List<Vector3> valueList, Dictionary<int, int> hashTable)
         {
-            for (int i = 0; i < values.Count; i++)
+            int hash = value.GetHashCode();
+            if (!hashTable.ContainsKey(hash))
             {
-                if (values[i] == value)
-                    return i;
+                valueList.Add(value);
+                hashTable.Add(hash, hashTable.Count);
             }
-            values.Add(value);
-            return values.Count - 1;
+
+            return hashTable[hash];
         }
     }
 }

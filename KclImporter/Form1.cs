@@ -74,10 +74,10 @@ namespace KclImporter
                         if (form.UseObjectMaterials)
                         {
                             if (matDictionary.ContainsKey(mesh.Faces[f].Material))
-                                mesh.Faces[f].CollisionAttribute = matDictionary[mesh.Faces[f].Material];
+                                mesh.Faces[f].SetCollisionAttribute(matDictionary[mesh.Faces[f].Material]);
                         }
                         else if (matDictionary.ContainsKey(mesh.Name))
-                            mesh.Faces[f].CollisionAttribute = matDictionary[mesh.Name];
+                            mesh.Faces[f].SetCollisionAttribute(matDictionary[mesh.Name]);
                     }
                 }
 

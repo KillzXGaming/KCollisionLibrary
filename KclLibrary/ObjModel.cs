@@ -448,6 +448,11 @@ namespace KclLibrary
         /// </summary>
         public ObjVertex[] Vertices;
 
+        public void SetCollisionAttribute(ushort value)
+        {
+            CollisionAttribute = value;
+        }
+
         public override int GetHashCode()
         {
             return base.GetHashCode() ^ 
@@ -455,11 +460,6 @@ namespace KclLibrary
                 Vertices[0].GetHashCode() ^ 
                 Vertices[2].GetHashCode() ^ 
                 Vertices[1].GetHashCode();
-        }
-
-        public bool Equals(ObjFace face)
-        {
-            return Vertices.Equals(face.Vertices) && Material.Equals(face.Material);
         }
     }
 
