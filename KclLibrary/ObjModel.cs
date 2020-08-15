@@ -66,22 +66,11 @@ namespace KclLibrary
         {
             DebugLogger.WriteLine($"Creating triangle list....");
 
-            List<string> vertexCompare = new List<string>();
-
             List<Triangle> triangles = new List<Triangle>();
             foreach (var mesh in Meshes)
             {
                  foreach (var face in mesh.Faces)
                 {
-                    string vertexData = "";
-                    for (int i = 0; i < face.Vertices.Length; i++)
-                        vertexData += face.Vertices[i].Position + face.Vertices[i].Normal + face.Material;
-
-                    if (vertexCompare.Contains(vertexData))
-                        continue;
-
-                    vertexCompare.Add(vertexData);
-
                     var triangle = new Triangle();
                     triangle.Attribute = face.CollisionAttribute;
                     triangle.Vertices = new Vector3[3];
@@ -91,8 +80,6 @@ namespace KclLibrary
                     triangles.Add(triangle);
                 }
             }
-            vertexCompare.Clear();
-
             return triangles;
         }
 
@@ -134,6 +121,8 @@ namespace KclLibrary
             Materials = new List<ObjMaterial>();
 
             ObjMesh currentMesh = new ObjMesh("Mesh");
+
+            HashSet<int> faceHashes = new HashSet<int>();
 
             using (StreamReader reader = new StreamReader(stream, Encoding.Default, true, 81920, leaveOpen))
             {
@@ -190,7 +179,13 @@ namespace KclLibrary
                                     face.Vertices[i].Normal = Normals[Int32.Parse(vertexArgs[2]) - 1];
                                 }
                             }
-                            currentMesh.Faces.Add(face);
+
+                            int hash = face.GetHashCode();
+                            if (!faceHashes.Contains(hash))
+                            {
+                                currentMesh.Faces.Add(face);
+                                faceHashes.Add(hash);
+                            }
                             continue;
                         case "usemtl":
                             {
@@ -201,6 +196,10 @@ namespace KclLibrary
                     }
                 }
             }
+
+            Console.WriteLine($"FACE COUNT {currentMesh.Faces.Count}");
+
+            faceHashes.Clear();
 
             if (Meshes.Count == 0) //No object or groups present, use one single mesh
                 Meshes.Add(currentMesh);
@@ -287,6 +286,7 @@ namespace KclLibrary
         /// </param>
         public void Save(Stream stream)
         {
+            HashSet<int> faceHashes = new HashSet<int>();
             using (StreamWriter writer = new StreamWriter(stream, Encoding.Default))
             {
                 int positionShift = 1;
@@ -316,6 +316,12 @@ namespace KclLibrary
                     string currentMaterial = "";
                     foreach (var face in mesh.Faces.OrderBy(x => x.Material))
                     {
+                        int hash = face.GetHashCode();
+                        if (faceHashes.Contains(hash))
+                            continue;
+
+                        faceHashes.Add(hash);
+
                         if (face.Material != currentMaterial) {
                             currentMaterial = face.Material;
                             writer.WriteLine($"usemtl {currentMaterial}");
@@ -335,6 +341,7 @@ namespace KclLibrary
                     normalShift += normals.Count;
                 }
             }
+            faceHashes.Clear();
         }
 
         /// <summary>
@@ -424,7 +431,7 @@ namespace KclLibrary
     /// <summary>
     /// Represents a triangle in an <see cref="ObjMesh"/>.
     /// </summary>
-    public class ObjFace
+    public struct ObjFace
     {
         /// <summary>
         /// The material used for this face.
@@ -440,6 +447,20 @@ namespace KclLibrary
         /// The three <see cref="ObjVertex"/> vertices which define this triangle.
         /// </summary>
         public ObjVertex[] Vertices;
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode() ^ 
+                Material.GetHashCode() ^
+                Vertices[0].GetHashCode() ^ 
+                Vertices[2].GetHashCode() ^ 
+                Vertices[1].GetHashCode();
+        }
+
+        public bool Equals(ObjFace face)
+        {
+            return Vertices.Equals(face.Vertices) && Material.Equals(face.Material);
+        }
     }
 
     /// <summary>
@@ -463,6 +484,27 @@ namespace KclLibrary
         /// The vertex normal from the normal array of the owning <see cref="ObjModel"/>.
         /// </summary>
         public Vector3 Normal;
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode() ^
+                   Position.GetHashCode() ^
+                   Normal.GetHashCode();
+        }
     }
 
+    public class ObjFaceComparer : IEqualityComparer<ObjFace>
+    {
+        public bool Equals(ObjFace x, ObjFace y)
+        {
+            if (x.GetHashCode() != y.GetHashCode())
+                return false;
+
+            return true;
+        }
+
+        public int GetHashCode(ObjFace obj) {
+            return obj.GetHashCode();
+        }
+    }
 }
