@@ -69,7 +69,7 @@ namespace KclLibrary
         /// <param name="maxTrianglesInCube">The maximum number of triangles to sort into this node.</param>
         /// <param name="minCubeSize">The minimum size a cube can be subdivided to.</param>
         internal PolygonOctree(Dictionary<ushort, Triangle> triangles, Vector3 cubePosition, float cubeSize,
-            int maxTrianglesInCube, int minCubeSize) : base(0)
+            int maxTrianglesInCube, int maxCubeSize, int minCubeSize, int maxDepth, int depth = 0) : base(0)
         {
             //Adjust the cube sizes based on EFE's method
             Vector3 cubeCenter = cubePosition + new Vector3(cubeSize / 2f, cubeSize / 2f, cubeSize / 2f);
@@ -85,7 +85,10 @@ namespace KclLibrary
                 }
             }
 
-            if (cubeSize > minCubeSize && containedTriangles.Count > maxTrianglesInCube)
+            bool isTriangleList = cubeSize <= maxCubeSize && containedTriangles.Count <= maxTrianglesInCube ||
+                cubeSize <= minCubeSize || depth > maxDepth;
+
+            if (!isTriangleList)
             {
                 // Too many triangles are in this cube, and it can still be subdivided into smaller cubes.
                 float childCubeSize = cubeSize / 2f;
@@ -96,7 +99,7 @@ namespace KclLibrary
                         for (int x = 0; x < 2; x++) {
                             Vector3 childCubePosition = cubePosition + childCubeSize * new Vector3(x, y, z);
                             Children[i++] = new PolygonOctree(containedTriangles, childCubePosition, childCubeSize,
-                                maxTrianglesInCube, minCubeSize);
+                                maxTrianglesInCube, maxCubeSize, minCubeSize, maxDepth, depth + 1);
                         }
                     }
                 }

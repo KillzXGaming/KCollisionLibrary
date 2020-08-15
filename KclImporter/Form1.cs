@@ -12,6 +12,7 @@ using KclLibrary;
 using System.IO;
 using System.Threading;
 using System.Numerics;
+using ByamlExt.Byaml;
 
 namespace KclImporter
 {
@@ -98,6 +99,11 @@ namespace KclImporter
                     sfd.FileName = Path.GetFileNameWithoutExtension(fileName);
                     if (sfd.ShowDialog() == DialogResult.OK) {
                         kcl.Save(sfd.FileName);
+
+                        if (form.AttributeByml != null)
+                        {
+                            File.WriteAllBytes($"{sfd.FileName.Replace(".kcl", "")}Attribute.byml", ByamlFile.SaveN(form.AttributeByml));
+                        }
                     }
 
                     window?.Close();

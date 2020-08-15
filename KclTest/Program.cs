@@ -17,18 +17,20 @@ namespace KclTest
             var settings = new CollisionImportSettings()
             {
                 //Octree Settings
-                PaddingMax = new System.Numerics.Vector3(25, 25, 25),
-                PaddingMin = new System.Numerics.Vector3(-25, -25, -25),
+                PaddingMax = new System.Numerics.Vector3(400, 400, 400),
+                PaddingMin = new System.Numerics.Vector3(-400, -400, -400),
                 MaxRootSize = 2048,
                 MinRootSize = 128,
-                MinCubeSize = 32,
-                MaxTrianglesInCube = 10,
+                MinCubeSize = 512,
+                MaxTrianglesInCube = 30,
                 //Model Settings
                 PrisimThickness = 30,
                 SphereRadius = 25,
             };
 
-            ReimportCollison("course_collision.kcl", FileVersion.VersionDS, false, settings);
+         //   ReimportCollison("courseY.kcl", FileVersion.Version2, true, settings);
+
+            ReimportCollison("course.kcl", FileVersion.VersionWII, true, settings);
             return;
         }
 

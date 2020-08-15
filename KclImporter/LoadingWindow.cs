@@ -17,6 +17,8 @@ namespace KclImporter
         {
             InitializeComponent();
 
+            progressBar1.Style = ProgressBarStyle.Marquee;
+
             DebugLogger.OnDebuggerUpdated += LoggerUpdated;
         }
 

@@ -21,9 +21,17 @@ namespace KclLibrary
         /// </summary>
         public int MinRootSize = 128;
         /// <summary>
+        /// The max cube size of the all octrees.
+        /// </summary>
+        public int MaxCubeSize = 0x100000;
+        /// <summary>
         /// The min cube size of the all octrees.
         /// </summary>
         public int MinCubeSize = 32;
+        /// <summary>
+        /// The max depth size of the all octrees.
+        /// </summary>
+        public int MaxOctreeDepth = 10;
         /// <summary>
         /// The max amount of triangles in an octree.
         /// When the limit is reached, octrees will divide until the min cube size is reached.

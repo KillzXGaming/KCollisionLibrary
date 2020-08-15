@@ -554,6 +554,8 @@ namespace KclLibrary
 
         private void Write(BinaryDataWriter writer)
         {
+            DebugLogger.WriteLine($"Writing binary {this.ByteOrder} {Version}");
+
             writer.ByteOrder = this.ByteOrder;
             if (Version == FileVersion.Version2)
                 WriteV2(writer);

@@ -137,18 +137,17 @@ namespace KclLibrary
             DebugLogger.WriteLine($"Creating Octrees {cubeCounts}");
 
             int index = 0;
-            for (int z = 0; z < cubeCounts.Z; z++)
-            {
-                for (int y = 0; y < cubeCounts.Y; y++)
-                {
-                    for (int x = 0; x < cubeCounts.X; x++)
-                    {
+            for (int z = 0; z < cubeCounts.Z; z++) {
+                for (int y = 0; y < cubeCounts.Y; y++) {
+                    for (int x = 0; x < cubeCounts.X; x++) {
                         Vector3 cubePosition = minCoordinate + ((float)cubeSize) * new Vector3(x, y, z);
                         PolygonOctreeRoots[index++] = new PolygonOctree(triangles, cubePosition, cubeSize,
-                            settings.MaxTrianglesInCube, settings.MinCubeSize);
+                            settings.MaxTrianglesInCube, settings.MaxCubeSize, 
+                            settings.MinCubeSize, settings.MaxOctreeDepth);
                     }
                 }
             }
+            DebugLogger.WriteLine($"Finished Octree");
         }
 
         // ---- PROPERTIES ---------------------------------------------------------------------------------------------
@@ -287,12 +286,9 @@ namespace KclLibrary
             int cubeSize = 1 << (int)CoordinateShift.X;
 
             int index = 0;
-            for (int z = 0; z < cubeCounts.Z; z++)
-            {
-                for (int y = 0; y < cubeCounts.Y; y++)
-                {
-                    for (int x = 0; x < cubeCounts.X; x++)
-                    {
+            for (int z = 0; z < cubeCounts.Z; z++) {
+                for (int y = 0; y < cubeCounts.Y; y++)  {
+                    for (int x = 0; x < cubeCounts.X; x++) {
                         Vector3 cubePosition = MinCoordinate + ((float)cubeSize) * new Vector3(x, y, z);
                         GetOctreeBounding(boundings, PolygonOctreeRoots[index++], cubePosition, (float)cubeSize);
                     }
@@ -533,12 +529,9 @@ namespace KclLibrary
             {
                 float childCubeSize = cubeSize / 2f;
                 int i = 0;
-                for (int z = 0; z < 2; z++)
-                {
-                    for (int y = 0; y < 2; y++)
-                    {
-                        for (int x = 0; x < 2; x++)
-                        {
+                for (int z = 0; z < 2; z++) {
+                    for (int y = 0; y < 2; y++) {
+                        for (int x = 0; x < 2; x++) {
                             Vector3 childCubePosition = cubePosition + childCubeSize * new Vector3(x, y, z);
                             GetOctreeBounding(boundings, octree.Children[i++], childCubePosition, childCubeSize);
                         }

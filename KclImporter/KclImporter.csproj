@@ -43,6 +43,9 @@
     <Reference Include="Syroot.BinaryData">
       <HintPath>.\Syroot.BinaryData.dll</HintPath>
     </Reference>
+    <Reference Include="Syroot.Maths">
+      <HintPath>.\Syroot.Maths.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
