@@ -1,5 +1,11 @@
 # KCollisionLibrary
 
+## Projects
+- KclImporter (A executable program used for importing and exporting collision models)
+- KclLibraryGUI (A library for gui handling importing and configuring material attributes)
+= KclRender (A 3D view displaying collision models and hit detection of octree boundings)
+- KclLibrary (The main collision library for handling the file binaries, hit detection, etc)
+
 ## Features
 - Supports all versions. GCN, WII, DS, 3DS Wii U, and Switch
 - Supports multiple model subdivisions for V2 KCL (WiiU/Switch) allowing for high poly collision models.
