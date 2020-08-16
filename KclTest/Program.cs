@@ -17,27 +17,6 @@ namespace KclTest
         static void Main(string[] args)
         {
             bool bigEndian = args.Contains("-be");
-
-            ObjModel obj = new ObjModel("map.obj");
-            var settings = new CollisionImportSettings()
-            {
-                //Octree Settings
-                PaddingMax = new System.Numerics.Vector3(1, 1, 1),
-                PaddingMin = new System.Numerics.Vector3(-1, -1, -1),
-                MaxRootSize = 1024,
-                MinRootSize = 128,
-                MinCubeSize = 128,
-                MaxTrianglesInCube = 50,
-                //Model Settings
-                PrismThickness = 1,
-            };
-
-            KCLFile kclFile = new KCLFile(obj.ToTriangles(), FileVersion.VersionGC, true, settings);
-            var collisionHit = kclFile.CheckHit(new Vector3(10, 200.15f, 40.0f));
-            //Stores prisim and distance info
-            var prisim = collisionHit.Prism;
-            var dist = collisionHit.Distance;
-
             foreach (var file in args)
             {
                 string ext = Path.GetExtension(file);

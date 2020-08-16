@@ -251,7 +251,7 @@ namespace CollisionGUI
             foreach (var model in KclFile.Models)
             {
                 foreach (var prism in model.HitPrisms) {
-                    Shader.SetInt($"pickedFaces[{index++}]", (int)prisim.GlobalIndex);
+                    Shader.SetInt($"pickedFaces[{index++}]", (int)prism.GlobalIndex);
                 }
             }
 
