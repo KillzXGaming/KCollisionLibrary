@@ -38,9 +38,9 @@ namespace KclLibrary
         /// </summary>
         public int MaxTrianglesInCube = 10;
         /// <summary>
-        /// Determines the max distance of the normals for a prisim.
+        /// Determines the max distance of the normals for a prism.
         /// </summary>
-        public float PrisimThickness = 30;
+        public float PrismThickness = 30;
         /// <summary>
         /// The sphere radius used for an unknown purpose.
         /// </summary>

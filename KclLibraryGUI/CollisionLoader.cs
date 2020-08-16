@@ -72,7 +72,7 @@ namespace KclLibraryGUI
                 var settings = new CollisionImportSettings()
                 {
                     SphereRadius = preset.SphereRadius,
-                    PrisimThickness = preset.PrismThickness,
+                    PrismThickness = preset.PrismThickness,
                     PaddingMax = new Vector3(preset.PaddingMax),
                     PaddingMin = new Vector3(preset.PaddingMin),
                     MaxRootSize = preset.MaxRootSize,

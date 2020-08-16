@@ -20,15 +20,15 @@ namespace KclLibrary
             Vector3 minCoordinate = new Vector3(Single.MaxValue, Single.MaxValue, Single.MaxValue);
             Vector3 maxCoordinate = new Vector3(Single.MinValue, Single.MinValue, Single.MinValue);
 
-            List<KclPrisim> prisimList = new List<KclPrisim>();
+            List<KclPrism> prismList = new List<KclPrism>();
             Dictionary<ushort, Triangle> triangles = new Dictionary<ushort, Triangle>();
 
             Positions = new List<Vector3>();
             Normals = new List<Vector3>();
-            Prisims = new KclPrisim[0];
+            Prisms = new KclPrism[0];
             Version = version;
 
-            PrisimThickness = settings.PrisimThickness;
+            PrismThickness = settings.PrismThickness;
             SphereRadius = settings.SphereRadius;
 
             Dictionary<string, int> positionTable = new Dictionary<string, int>();
@@ -73,15 +73,15 @@ namespace KclLibrary
                 normalB = Vector3.Normalize(normalB);
                 normalC = Vector3.Normalize(normalC);
 
-                //Create a KCL prisim
-                KclPrisim face = new KclPrisim()
+                //Create a KCL Prism
+                KclPrism face = new KclPrism()
                 {
                     PositionIndex = (ushort)IndexOfVertex(triangle.Vertices[0], Positions, positionTable),
                     DirectionIndex = (ushort)IndexOfVertex(direction, Normals, normalTable),
                     Normal1Index = (ushort)IndexOfVertex(normalA, Normals, normalTable),
                     Normal2Index = (ushort)IndexOfVertex(normalB, Normals, normalTable),
                     Normal3Index = (ushort)IndexOfVertex(normalC, Normals, normalTable),
-                    GlobalIndex = baseTriCount + (uint)prisimList.Count,
+                    GlobalIndex = baseTriCount + (uint)prismList.Count,
                     CollisionFlags = triangle.Attribute,
                 };
 
@@ -92,21 +92,21 @@ namespace KclLibrary
                 float length = Vector3.Dot(triangle.Vertices[1] - triangle.Vertices[0], normalC);
                 face.Length = length;
 
-                prisimList.Add(face);
+                prismList.Add(face);
             }
 
             positionTable.Clear();
             normalTable.Clear();
 
             //No triangles found to intersect the current box, return.
-            if (prisimList.Count == 0) return;
+            if (prismList.Count == 0) return;
 
             //Padd the coordinates
             minCoordinate += settings.PaddingMin;
             maxCoordinate += settings.PaddingMax;
 
             MinCoordinate = minCoordinate;
-            Prisims = prisimList.ToArray();
+            Prisms = prismList.ToArray();
 
             // Compute the octree.
             Vector3 size = maxCoordinate - minCoordinate;
@@ -184,12 +184,12 @@ namespace KclLibrary
         /// <summary>
         /// Gets the array of triangles.
         /// </summary>
-        public KclPrisim[] Prisims { get; internal set; }
+        public KclPrism[] Prisms { get; internal set; }
 
         /// <summary>
-        /// Gets or sets the thickness of the prisims.
+        /// Gets or sets the thickness of the Prisms.
         /// </summary>
-        public float PrisimThickness { get; set; }
+        public float PrismThickness { get; set; }
 
         /// <summary>
         /// Gets the root nodes of the model triangle octree. Can be <c>null</c> if no octree was loaded or created yet.
@@ -197,7 +197,7 @@ namespace KclLibrary
         public PolygonOctree[] PolygonOctreeRoots { get; private set; }
 
         /// <summary>
-        /// Gets or sets the thickness of the prisims.
+        /// Gets or sets the thickness of the prisms.
         /// </summary>
         public float SphereRadius { get; set; } = 1f;
 
@@ -207,9 +207,9 @@ namespace KclLibrary
         public FileVersion Version { get; private set; } = FileVersion.Version2;
 
         /// <summary>
-        /// A list of prisims which are hit detectedfrom the collision handler.
+        /// A list of prisms which are hit detectedfrom the collision handler.
         /// </summary>
-        public List<KclPrisim> HitPrisims { get; internal set; } = new List<KclPrisim>();
+        public List<KclPrism> HitPrisms { get; internal set; } = new List<KclPrism>();
 
         /// <summary>
         /// A list of octrees which are hit detected from the collision handler.
@@ -219,22 +219,22 @@ namespace KclLibrary
         // ---- METHODS (PUBLIC) -------------------------------------------------------------------------------------
 
         /// <summary>
-        /// Creates a triangle with 3 positions from the given collision prisim.
+        /// Creates a triangle with 3 positions from the given collision prism.
         /// </summary>
         /// <returns></returns>
-        public Triangle GetTriangle(KclPrisim prisim)
+        public Triangle GetTriangle(KclPrism Prism)
         {
-            Vector3 A = Positions[prisim.PositionIndex];
-            Vector3 CrossA = Vector3.Cross(Normals[prisim.Normal1Index], Normals[prisim.DirectionIndex]);
-            Vector3 CrossB = Vector3.Cross(Normals[prisim.Normal2Index], Normals[prisim.DirectionIndex]);
-            Vector3 B = A + CrossB * (prisim.Length / Vector3.Dot(CrossB, Normals[prisim.Normal3Index]));
-            Vector3 C = A + CrossA * (prisim.Length / Vector3.Dot(CrossA, Normals[prisim.Normal3Index]));
+            Vector3 A = Positions[Prism.PositionIndex];
+            Vector3 CrossA = Vector3.Cross(Normals[Prism.Normal1Index], Normals[Prism.DirectionIndex]);
+            Vector3 CrossB = Vector3.Cross(Normals[Prism.Normal2Index], Normals[Prism.DirectionIndex]);
+            Vector3 B = A + CrossB * (Prism.Length / Vector3.Dot(CrossB, Normals[Prism.Normal3Index]));
+            Vector3 C = A + CrossA * (Prism.Length / Vector3.Dot(CrossA, Normals[Prism.Normal3Index]));
             return new Triangle(A, B, C);
         }
 
         public KCLHit CheckHit(Vector3 point)
         {
-            HitPrisims.Clear();
+            HitPrisms.Clear();
             var hit = CollisionHandler.CheckPoint(this, point, 1, 1);
             return hit;
         }
@@ -359,17 +359,17 @@ namespace KclLibrary
             long modelPosition = reader.Position;
             int positionArrayOffset = reader.ReadInt32();
             int normalArrayOffset = reader.ReadInt32();
-            int prisimArrayOffset = reader.ReadInt32();
+            int prismArrayOffset = reader.ReadInt32();
             int octreeOffset = reader.ReadInt32();
 
             if (version == FileVersion.VersionDS)
             {
-                PrisimThickness = reader.ReadFx32();
+                PrismThickness = reader.ReadFx32();
                 MinCoordinate = reader.ReadVector3Fx32();
                 CoordinateMask = reader.ReadVector3U();
                 CoordinateShift = reader.ReadVector3U();
                 SphereRadius = reader.ReadFx32();
-                prisimArrayOffset += 0x10;
+                prismArrayOffset += 0x10;
 
                 // Read the positions.
                 reader.Position = modelPosition + positionArrayOffset; // Mostly unrequired, data is successive.
@@ -378,17 +378,17 @@ namespace KclLibrary
 
                 // Read the normals.
                 reader.Position = modelPosition + normalArrayOffset; // Mostly unrequired, data is successive.
-                int normalCount = (prisimArrayOffset - normalArrayOffset) / 6;
+                int normalCount = (prismArrayOffset - normalArrayOffset) / 6;
                 Normals = new List<Vector3>(reader.ReadVector3Fx16s(normalCount));
 
-                // Read the prisims.
-                reader.Position = modelPosition + prisimArrayOffset; // Mostly unrequired, data is successive.
-                int prisimCount = (octreeOffset - prisimArrayOffset) / (version >= FileVersion.Version2 ? 20 : 16);
-                Prisims = reader.ReadPrisims(prisimCount, version);
+                // Read the Prisms.
+                reader.Position = modelPosition + prismArrayOffset; // Mostly unrequired, data is successive.
+                int PrismCount = (octreeOffset - prismArrayOffset) / (version >= FileVersion.Version2 ? 20 : 16);
+                Prisms = reader.ReadPrisms(PrismCount, version);
             }
             else
             {
-                PrisimThickness = reader.ReadSingle();
+                PrismThickness = reader.ReadSingle();
                 MinCoordinate = reader.ReadVector3F();
                 CoordinateMask = reader.ReadVector3U();
                 CoordinateShift = reader.ReadVector3U();
@@ -396,7 +396,7 @@ namespace KclLibrary
                     SphereRadius = reader.ReadSingle();
 
                 if (version < FileVersion.Version2) //octree triangle indices are -1 indexed. Shift the offset value.
-                    prisimArrayOffset += 0x10;
+                    prismArrayOffset += 0x10;
 
                 // Read the positions.
                 reader.Position = modelPosition + positionArrayOffset; // Mostly unrequired, data is successive.
@@ -405,13 +405,13 @@ namespace KclLibrary
 
                 // Read the normals.
                 reader.Position = modelPosition + normalArrayOffset; // Mostly unrequired, data is successive.
-                int normalCount = (prisimArrayOffset - normalArrayOffset) / 12;
+                int normalCount = (prismArrayOffset - normalArrayOffset) / 12;
                 Normals = new List<Vector3>(reader.ReadVector3Fs(normalCount));
 
-                // Read the prisims.
-                reader.Position = modelPosition + prisimArrayOffset; // Mostly unrequired, data is successive.
-                int prisimCount = (octreeOffset - prisimArrayOffset) / (version >= FileVersion.Version2 ? 20 : 16);
-                Prisims = reader.ReadPrisims(prisimCount, version);
+                // Read the prisms.
+                reader.Position = modelPosition + prismArrayOffset; // Mostly unrequired, data is successive.
+                int PrismCount = (octreeOffset - prismArrayOffset) / (version >= FileVersion.Version2 ? 20 : 16);
+                Prisms = reader.ReadPrisms(PrismCount, version);
             }
 
             reader.Position = modelPosition + octreeOffset; // Mostly unrequired, data is successive.
@@ -437,7 +437,7 @@ namespace KclLibrary
             Offset octreeOffset = writer.ReserveOffset();
             if (version == FileVersion.VersionDS)
             {
-                writer.WriteFx32(PrisimThickness);
+                writer.WriteFx32(PrismThickness);
                 writer.WriteVector3Fx32(MinCoordinate);
                 writer.Write(CoordinateMask);
                 writer.Write(CoordinateShift);
@@ -453,11 +453,11 @@ namespace KclLibrary
 
                 // Write the triangles.
                 triangleArrayOffset.Satisfy((int)(writer.Position - modelPosition - 0x10));
-                writer.Write(Prisims, version);
+                writer.Write(Prisms, version);
             }
             else
             {
-                writer.Write(PrisimThickness);
+                writer.Write(PrismThickness);
                 writer.Write(MinCoordinate);
                 writer.Write(CoordinateMask);
                 writer.Write(CoordinateShift);
@@ -477,7 +477,7 @@ namespace KclLibrary
                     triangleArrayOffset.Satisfy((int)(writer.Position - modelPosition - 0x10));
                 else
                     triangleArrayOffset.Satisfy((int)(writer.Position - modelPosition));
-                writer.Write(Prisims, version);
+                writer.Write(Prisms, version);
             }
 
             // Write the octree.

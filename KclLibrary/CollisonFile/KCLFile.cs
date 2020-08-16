@@ -19,7 +19,7 @@ namespace KclLibrary
 
         private const int _version2 = 0x02020000;
 
-        private static readonly int MaxModelPrisimCount = 65535 / 4;
+        private static readonly int MaxModelPrismCount = 65535 / 4;
 
         // ---- CONSTRUCTORS & DESTRUCTOR ------------------------------------------------------------------------------
 
@@ -80,9 +80,9 @@ namespace KclLibrary
         public Vector3U CoordinateShift { get; private set; }
 
         /// <summary>
-        /// Gets the total amount of prisims used in the KCL file.
+        /// Gets the total amount of prisms used in the KCL file.
         /// </summary>
-        public int PrisimCount { get; private set; }
+        public int PrismCount { get; private set; }
 
         /// <summary>
         /// Gets the root node of the model octree.
@@ -118,7 +118,7 @@ namespace KclLibrary
             objModel.Meshes.Add(mesh);
 
             foreach (KCLModel model in Models) {
-                foreach (var face in model.Prisims)
+                foreach (var face in model.Prisms)
                 {
                     var triangle = model.GetTriangle(face);
                     var normal = triangle.Normal;
@@ -202,7 +202,7 @@ namespace KclLibrary
             DebugLogger.WriteLine($"-MinCubeSize {settings.MinCubeSize}");
             DebugLogger.WriteLine($"-PaddingMax {settings.PaddingMax}");
             DebugLogger.WriteLine($"-PaddingMin {settings.PaddingMin}");
-            DebugLogger.WriteLine($"-PrisimThickness {settings.PrisimThickness}");
+            DebugLogger.WriteLine($"-PrismThickness {settings.PrismThickness}");
             DebugLogger.WriteLine($"-SphereRadius {settings.SphereRadius}");
 
             DebugLogger.WriteLine($"Calculating bounding sizes...");
@@ -262,7 +262,7 @@ namespace KclLibrary
 
             //Load all the model data
             CreateModelOctree(modelRoots, ModelOctreeRoot.Children, settings, 0);
-            PrisimCount = Models.Sum(x => x.Prisims.Length);
+            PrismCount = Models.Sum(x => x.Prisms.Length);
 
             stopWatch.Stop();
 
@@ -273,7 +273,7 @@ namespace KclLibrary
         }
 
         /// <summary>
-        /// Checks if a prisim gets hit from a given point and returns hit information.
+        /// Checks if a prism gets hit from a given point and returns hit information.
         /// </summary>
         /// <returns></returns>
         public KCLHit CheckHit(Vector3 point)
@@ -281,7 +281,7 @@ namespace KclLibrary
             foreach (var model in Models)
             {
                 model.HitOctrees.Clear();
-                model.HitPrisims.Clear();
+                model.HitPrisms.Clear();
             }
 
 
@@ -394,7 +394,7 @@ namespace KclLibrary
                     bool isMerged = false;
                     foreach (var globalModel in GlobalList)
                     {
-                        if (modelRoots[i].Triangles.Count + globalModel.Triangles.Count < MaxModelPrisimCount)
+                        if (modelRoots[i].Triangles.Count + globalModel.Triangles.Count < MaxModelPrismCount)
                         {
                             globalModel.Triangles.AddRange(modelRoots[i].Triangles);
                             globalModel.MergedBlockIndices.Add(i);
@@ -416,12 +416,12 @@ namespace KclLibrary
         }
 
         //Subdivies a list of triangles into 8 regions.
-        //When the max prisim count is rearched, it divides again.
+        //When the max prism count is rearched, it divides again.
         private List<ModelGroup> CreateModelDivision(Vector3 position, List<Triangle> triangles, Vector3 boxSize, int level = 0)
         {
             //Version 1 uses one single model so skip dividing them.
             //Models only split if their poly count is too high, so add a check for it.
-            if (Version < FileVersion.Version2 || triangles.Count < MaxModelPrisimCount && level == 0) {
+            if (Version < FileVersion.Version2 || triangles.Count < MaxModelPrismCount && level == 0) {
                 ModelGroup model = new ModelGroup();
                 model.Triangles.AddRange(triangles);
                 model.BlockIndex = 0;
@@ -449,11 +449,11 @@ namespace KclLibrary
                                 containedTriangles.Add(triangles[i]);
                         }
 
-                        if (containedTriangles.Count >= MaxModelPrisimCount)
+                        if (containedTriangles.Count >= MaxModelPrismCount)
                             Console.WriteLine($"Dividing model at {containedTriangles.Count} polygons.");
 
-                        //If the children have too many prisims, divide into 8 more regions as children.
-                        if (containedTriangles.Count >= MaxModelPrisimCount)
+                        //If the children have too many Prisms, divide into 8 more regions as children.
+                        if (containedTriangles.Count >= MaxModelPrismCount)
                             model.Children = CreateModelDivision(cubePosition, containedTriangles, boxSize / 2f, level + 1);
                         else //Set the triangle list for this region. If it is empty, it will be skipped later
                             model.Triangles = containedTriangles;
@@ -519,7 +519,7 @@ namespace KclLibrary
                     ModelOctreeRoot.Children[i] = new ModelOctreeNode() { ModelIndex = 0 };
                 }
 
-                PrisimCount = model.Prisims.Length;
+                PrismCount = model.Prisms.Length;
                 MinCoordinate = model.MinCoordinate;
 
                 //Todo, auto generate the rest of V2 header data for V1 for cross conversion.
@@ -532,7 +532,7 @@ namespace KclLibrary
                 MinCoordinate = reader.ReadVector3F();
                 MaxCoordinate = reader.ReadVector3F();
                 CoordinateShift = reader.ReadVector3U();
-                PrisimCount = reader.ReadInt32();
+                PrismCount = reader.ReadInt32();
 
                 reader.Position = octreeOffset; // Mostly unrequired, data is successive.
                 for (int i = 0; i < ModelOctreeNode.ChildCount; i++) {
@@ -608,7 +608,7 @@ namespace KclLibrary
             writer.Write(MinCoordinate);
             writer.Write(MaxCoordinate);
             writer.Write(CoordinateShift);
-            writer.Write(PrisimCount);
+            writer.Write(PrismCount);
 
             // Write the model octree.
             octreeOffset.Satisfy();

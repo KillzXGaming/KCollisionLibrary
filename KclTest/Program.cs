@@ -7,6 +7,8 @@ using KclLibrary;
 using Syroot.BinaryData;
 using System.Diagnostics;
 using System.Threading;
+using System.IO;
+using System.Numerics;
 
 namespace KclTest
 {
@@ -14,26 +16,45 @@ namespace KclTest
     {
         static void Main(string[] args)
         {
-            var obj = new ObjModel("course.obj");
-            var kcl = new KCLFile(obj.ToTriangles(), FileVersion.Version2, true);
-            kcl.Save("course.test.kcl");
+            bool bigEndian = args.Contains("-be");
 
-            //MKWII Settings
+            ObjModel obj = new ObjModel("map.obj");
             var settings = new CollisionImportSettings()
             {
                 //Octree Settings
-                PaddingMax = new System.Numerics.Vector3(250, 250, 250),
-                PaddingMin = new System.Numerics.Vector3(-250, -250, -250),
-                MaxRootSize = 2048,
-                MinCubeSize = 512,
-                MaxTrianglesInCube = 60,
+                PaddingMax = new System.Numerics.Vector3(1, 1, 1),
+                PaddingMin = new System.Numerics.Vector3(-1, -1, -1),
+                MaxRootSize = 1024,
+                MinRootSize = 128,
+                MinCubeSize = 128,
+                MaxTrianglesInCube = 50,
                 //Model Settings
-                PrisimThickness = 300,
-                SphereRadius = 250,
+                PrismThickness = 1,
             };
-            ReimportCollison("CityWorldHomeBuilding022.kcl", FileVersion.Version2, false);
-            ReimportCollison("course.kcl", FileVersion.Version2, true);
-            return;
+
+            KCLFile kclFile = new KCLFile(obj.ToTriangles(), FileVersion.VersionGC, true, settings);
+            var collisionHit = kclFile.CheckHit(new Vector3(10, 200.15f, 40.0f));
+            //Stores prisim and distance info
+            var prisim = collisionHit.Prism;
+            var dist = collisionHit.Distance;
+
+            foreach (var file in args)
+            {
+                string ext = Path.GetExtension(file);
+                string name = file.Replace(ext, string.Empty);
+                if (ext == ".obj")
+                {
+                    var obj = new ObjModel(file);
+                    var kcl = new KCLFile(obj.ToTriangles(), FileVersion.Version2, bigEndian);
+                    kcl.Save($"{name}.kcl");
+                }
+                if (ext == ".kcl")
+                {
+                    var kcl = new KCLFile(file);
+                    var obj = kcl.CreateGenericModel();
+                    obj.Save($"{name}.obj");
+                }
+            }
         }
 
         //Exports the collision model as obj and reimports it into a new generated collision file.
@@ -43,9 +64,9 @@ namespace KclTest
             var kcl = new KCLFile(fileName);
 
             Dictionary<int, ushort> materialIds = new Dictionary<int, ushort>();
-            for (int i = 0; i < kcl.Models[0].Prisims.Length; i++)
+            for (int i = 0; i < kcl.Models[0].Prisms.Length; i++)
             {
-                materialIds.Add(i, kcl.Models[0].Prisims[i].CollisionFlags);
+                materialIds.Add(i, kcl.Models[0].Prisms[i].CollisionFlags);
             }
 
             var obj = kcl.CreateGenericModel();
@@ -63,14 +84,14 @@ namespace KclTest
                 MinCubeSize = 128,
                 MaxTrianglesInCube = 50,
                 //Model Settings
-                PrisimThickness = 1,
+                PrismThickness = 1,
             };
 
             var triangles = obj.ToTriangles();
             kcl = new KCLFile(triangles, FileVersion.VersionGC, true, settings);
-            for (int i = 0; i < kcl.Models[0].Prisims.Length; i++)
+            for (int i = 0; i < kcl.Models[0].Prisms.Length; i++)
             {
-                kcl.Models[0].Prisims[i].CollisionFlags = materialIds[i];
+                kcl.Models[0].Prisms[i].CollisionFlags = materialIds[i];
             }
 
             kcl.Save($"{fileName}.new.kcl");

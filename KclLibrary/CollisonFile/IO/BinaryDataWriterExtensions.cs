@@ -15,9 +15,9 @@ namespace KclLibrary
         /// </summary>
         /// <param name="self">The extended <see cref="BinaryDataWriter"/>.</param>
         /// <param name="values">The <see cref="KclFace"/> instances.</param>
-        internal static void Write(this BinaryDataWriter self, KclPrisim[] values, FileVersion version)
+        internal static void Write(this BinaryDataWriter self, KclPrism[] values, FileVersion version)
         {
-            foreach (KclPrisim value in values)
+            foreach (KclPrism value in values)
                 value.Write(self, version);
         }
 

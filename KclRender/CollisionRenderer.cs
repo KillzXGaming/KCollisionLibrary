@@ -24,6 +24,7 @@ namespace CollisionGUI
             base(Vector3.Zero, Vector3.Zero, Vector3.One)
         {
             KclFile = new KCLFile(fileName);
+            KclFile.Transform = System.Numerics.Matrix4x4.CreateScale(0.01f);
         }
 
         public int IndicesLength;
@@ -118,7 +119,7 @@ namespace CollisionGUI
             uint faceIndex = 0;
             foreach (var model in KclFile.Models)
             {
-                foreach (var face in model.Prisims)
+                foreach (var face in model.Prisms)
                 {
                     var triangle = model.GetTriangle(face);
 
@@ -249,7 +250,7 @@ namespace CollisionGUI
             int index = 0;
             foreach (var model in KclFile.Models)
             {
-                foreach (var prisim in model.HitPrisims) {
+                foreach (var prism in model.HitPrisms) {
                     Shader.SetInt($"pickedFaces[{index++}]", (int)prisim.GlobalIndex);
                 }
             }

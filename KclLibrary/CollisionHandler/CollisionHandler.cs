@@ -18,7 +18,7 @@ namespace KclLibrary
 
         internal static KCLHit CheckPoint(KCLModel model, Vector3 point, float thicknessScale, float pointDistance)
         {
-            float maxDistance = model.PrisimThickness * thicknessScale;
+            float maxDistance = model.PrismThickness * thicknessScale;
 
             int x = (int)(point.X - model.MinCoordinate.X) | 0;
             int y = (int)(point.Y - model.MinCoordinate.Y) | 0;
@@ -27,9 +27,9 @@ namespace KclLibrary
             if ((x & model.CoordinateMask.X) != 0 || (y & model.CoordinateMask.Y) != 0 || (z & model.CoordinateMask.Z) != 0)
                 return null;
 
-            var prisimIndices = searchBlock(model, x, y, z);
-            for (int i = 0; i < prisimIndices.Length; i++) {
-                var prism = model.Prisims[prisimIndices[i]];
+            var prismIndices = searchBlock(model, x, y, z);
+            for (int i = 0; i < prismIndices.Length; i++) {
+                var prism = model.Prisms[prismIndices[i]];
                 if (prism.Length <= 0.0f)
                     continue;
 
@@ -52,12 +52,12 @@ namespace KclLibrary
                 // if (dist < 0.0f || dist > maxDistance)
                 //     continue;
 
-                model.HitPrisims.Add(prism);
+                model.HitPrisms.Add(prism);
 
                 //Return with a proper hit with all checks passed.
                 return new KCLHit()
                 {
-                    Prisim = prism,
+                    Prism = prism,
                     Distance = dist,
                 };
             }
@@ -107,6 +107,6 @@ namespace KclLibrary
     public class KCLHit
     {
         public float Distance { get; set; }
-        public KclPrisim Prisim { get; set; }
+        public KclPrism Prism { get; set; }
     }
 }

@@ -8,9 +8,9 @@ using System.Threading.Tasks;
 namespace KclLibrary
 {
     /// <summary>
-    /// Represents a prisim as stored in a collision file.
+    /// Represents a prism as stored in a collision file.
     /// </summary>
-    public struct KclPrisim
+    public struct KclPrism
     {
         // ---- FIELDS -------------------------------------------------------------------------------------------------
 

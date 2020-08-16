@@ -21,11 +21,11 @@ namespace KclLibrary
         /// <param name="self">The extended <see cref="BinaryDataReader"/>.</param>
         /// <param name="count">The number of instances to read.</param>
         /// <returns>The <see cref="KclFace"/> instances.</returns>
-        internal static KclPrisim[] ReadPrisims(this BinaryDataReader self, int count, FileVersion version)
+        internal static KclPrism[] ReadPrisms(this BinaryDataReader self, int count, FileVersion version)
         {
-            KclPrisim[] values = new KclPrisim[count];
+            KclPrism[] values = new KclPrism[count];
             for (int i = 0; i < count; i++) {
-                values[i] = new KclPrisim();
+                values[i] = new KclPrism();
                 values[i].Read(self, version);
                 if (version != FileVersion.Version2) //Manually set the global index for older versions
                     values[i].GlobalIndex = (ushort)i;
