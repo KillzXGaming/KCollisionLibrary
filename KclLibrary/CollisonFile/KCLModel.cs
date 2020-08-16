@@ -31,8 +31,8 @@ namespace KclLibrary
             PrisimThickness = settings.PrisimThickness;
             SphereRadius = settings.SphereRadius;
 
-            Dictionary<int, int> positionHashTable = new Dictionary<int, int>();
-            Dictionary<int, int> normalHashTable = new Dictionary<int, int>();
+            Dictionary<string, int> positionTable = new Dictionary<string, int>();
+            Dictionary<string, int> normalTable = new Dictionary<string, int>();
 
             ushort triindex = 0;
             for (int i = 0; i < triangleList.Count; i++)
@@ -76,11 +76,11 @@ namespace KclLibrary
                 //Create a KCL prisim
                 KclPrisim face = new KclPrisim()
                 {
-                    PositionIndex = (ushort)IndexOfVertex(triangle.Vertices[0], Positions, positionHashTable),
-                    DirectionIndex = (ushort)IndexOfVertex(direction, Normals, normalHashTable),
-                    Normal1Index = (ushort)IndexOfVertex(normalA, Normals, normalHashTable),
-                    Normal2Index = (ushort)IndexOfVertex(normalB, Normals, normalHashTable),
-                    Normal3Index = (ushort)IndexOfVertex(normalC, Normals, normalHashTable),
+                    PositionIndex = (ushort)IndexOfVertex(triangle.Vertices[0], Positions, positionTable),
+                    DirectionIndex = (ushort)IndexOfVertex(direction, Normals, normalTable),
+                    Normal1Index = (ushort)IndexOfVertex(normalA, Normals, normalTable),
+                    Normal2Index = (ushort)IndexOfVertex(normalB, Normals, normalTable),
+                    Normal3Index = (ushort)IndexOfVertex(normalC, Normals, normalTable),
                     GlobalIndex = baseTriCount + (uint)prisimList.Count,
                     CollisionFlags = triangle.Attribute,
                 };
@@ -95,8 +95,8 @@ namespace KclLibrary
                 prisimList.Add(face);
             }
 
-            positionHashTable.Clear();
-            normalHashTable.Clear();
+            positionTable.Clear();
+            normalTable.Clear();
 
             //No triangles found to intersect the current box, return.
             if (prisimList.Count == 0) return;
@@ -666,16 +666,28 @@ namespace KclLibrary
             return count;
         }
 
-        private int IndexOfVertex(Vector3 value, List<Vector3> valueList, Dictionary<int, int> hashTable)
+        private int IndexOfVertex(Vector3 value, List<Vector3> valueList, Dictionary<string, int> lookupTable)
         {
-            int hash = value.GetHashCode();
-            if (!hashTable.ContainsKey(hash))
+            string key = value.ToString();
+            if (!lookupTable.ContainsKey(key))
             {
                 valueList.Add(value);
-                hashTable.Add(hash, hashTable.Count);
+                lookupTable.Add(key, lookupTable.Count);
             }
 
-            return hashTable[hash];
+            return lookupTable[key];
+        }
+
+        private static int ContainsVector3(Vector3 a, List<Vector3> b)
+        {
+            for (int i = 0; i < b.Count; i++)
+            {
+                if (b[i].X == a.X && b[i].Y == a.Y && b[i].Z == a.Z)
+                {
+                    return i;
+                }
+            }
+            return -1;
         }
     }
 }

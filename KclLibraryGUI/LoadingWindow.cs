@@ -1,15 +1,13 @@
-﻿using KclLibrary;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System;
 using System.Windows.Forms;
+using KclLibraryGUI;
+using KclLibrary;
+using System.IO;
+using System.Threading;
+using System.Numerics;
+using ByamlExt.Byaml;
 
-namespace KclImporter
+namespace KclLibraryGUI
 {
     public partial class LoadingWindow : Form
     {
@@ -18,7 +16,6 @@ namespace KclImporter
             InitializeComponent();
 
             progressBar1.Style = ProgressBarStyle.Marquee;
-
             DebugLogger.OnDebuggerUpdated += LoggerUpdated;
         }
 

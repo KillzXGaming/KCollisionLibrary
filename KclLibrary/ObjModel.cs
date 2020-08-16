@@ -66,11 +66,16 @@ namespace KclLibrary
         {
             DebugLogger.WriteLine($"Creating triangle list....");
 
+            List<ushort> attributes = new List<ushort>();
+
             List<Triangle> triangles = new List<Triangle>();
             foreach (var mesh in Meshes)
             {
                  foreach (var face in mesh.Faces)
                 {
+                    if (!attributes.Contains(face.CollisionAttribute))
+                        attributes.Add(face.CollisionAttribute);
+
                     var triangle = new Triangle();
                     triangle.Attribute = face.CollisionAttribute;
                     triangle.Vertices = new Vector3[3];
@@ -80,6 +85,10 @@ namespace KclLibrary
                     triangles.Add(triangle);
                 }
             }
+
+            foreach (var att in attributes)
+                DebugLogger.WriteLine($"CollisionAttribute {att}");
+
             return triangles;
         }
 
@@ -183,12 +192,7 @@ namespace KclLibrary
                                 }
                             }
 
-                            int hash = face.GetHashCode();
-                            if (!faceHashes.Contains(hash))
-                            {
-                                currentMesh.Faces.Add(face);
-                                faceHashes.Add(hash);
-                            }
+                            currentMesh.Faces.Add(face);
                             continue;
                         case "usemtl":
                             {
@@ -289,15 +293,14 @@ namespace KclLibrary
         /// </param>
         public void Save(Stream stream)
         {
-            HashSet<int> faceHashes = new HashSet<int>();
             using (StreamWriter writer = new StreamWriter(stream, Encoding.Default))
             {
                 int positionShift = 1;
                 int normalShift = 1;
                 foreach (var mesh in Meshes)
                 {
-                    Dictionary<int, int> positionHashTable = new Dictionary<int, int>();
-                    Dictionary<int, int> normalHashTable = new Dictionary<int, int>();
+                    Dictionary<string, int> positionTable = new Dictionary<string, int>();
+                    Dictionary<string, int> normalTable = new Dictionary<string, int>();
 
                     List<Vector3> positons = new List<Vector3>();
                     List<Vector3> normals = new List<Vector3>();
@@ -305,17 +308,17 @@ namespace KclLibrary
                     writer.WriteLine($"o {mesh.Name}");
                     foreach (var face in mesh.Faces) {
                         foreach (var v in face.Vertices) {
-                            int positionHash = v.Position.GetHashCode();
-                            int normalHash = v.Normal.GetHashCode();
-                            int texCoordHash = v.TexCoord.GetHashCode();
+                            string positionKey = v.Position.ToString();
+                            string normalKey = v.Normal.ToString();
+                            string texCoordKey = v.TexCoord.ToString();
 
-                            if (!positionHashTable.ContainsKey(positionHash)) {
-                                positionHashTable.Add(positionHash, positons.Count);
+                            if (!positionTable.ContainsKey(positionKey)) {
+                                positionTable.Add(positionKey, positons.Count);
                                 positons.Add(v.Position);
                             }
 
-                            if (!normalHashTable.ContainsKey(normalHash)) {
-                                normalHashTable.Add(normalHash, normals.Count);
+                            if (!normalTable.ContainsKey(normalKey)) {
+                                normalTable.Add(normalKey, normals.Count);
                                 normals.Add(v.Normal);
                             }
                         }
@@ -329,12 +332,6 @@ namespace KclLibrary
                     string currentMaterial = "";
                     foreach (var face in mesh.Faces.OrderBy(x => x.Material))
                     {
-                        int hash = face.GetHashCode();
-                        if (faceHashes.Contains(hash))
-                            continue;
-
-                        faceHashes.Add(hash);
-
                         if (face.Material != currentMaterial) {
                             currentMaterial = face.Material;
                             writer.WriteLine($"usemtl {currentMaterial}");
@@ -343,8 +340,8 @@ namespace KclLibrary
                         string faceData = "f";
                         foreach (var v in face.Vertices)
                         {
-                            int positionIndex = positionShift + positionHashTable[v.Position.GetHashCode()];
-                            int normalIndex = normalShift + normalHashTable[v.Normal.GetHashCode()];
+                            int positionIndex = positionShift + positionTable[v.Position.ToString()];
+                            int normalIndex = normalShift + normalTable[v.Normal.ToString()];
                             faceData += " " + string.Join("//", new string[] { positionIndex.ToString(), normalIndex.ToString() });
                         }
                         writer.WriteLine(faceData);
@@ -354,7 +351,6 @@ namespace KclLibrary
                     normalShift += normals.Count;
                 }
             }
-            faceHashes.Clear();
         }
 
         /// <summary>
@@ -461,8 +457,10 @@ namespace KclLibrary
         /// </summary>
         public ObjVertex[] Vertices;
 
-        public void SetCollisionAttribute(ushort value)
+        public ObjFace(ObjFace face, ushort value)
         {
+            Vertices = face.Vertices;
+            Material = face.Material;
             CollisionAttribute = value;
         }
 

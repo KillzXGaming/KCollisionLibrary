@@ -4,11 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace KclImporter
+namespace KclLibraryGUI
 {
     public class MaterialWindowSettings
     {
         public static string GamePreset = "Default";
         public static string Platform = "SWITCH";
+        public static bool UsePresetEditor = false;
     }
 }

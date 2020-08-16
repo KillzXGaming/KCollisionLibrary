@@ -61,60 +61,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CollisionPresetData.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
-    <Compile Include="LoadingWindow.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="LoadingWindow.Designer.cs">
-      <DependentUpon>LoadingWindow.cs</DependentUpon>
-    </Compile>
-    <Compile Include="MaterialSelection\MaterialCollisionPicker.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="MaterialSelection\MaterialCollisionPicker.Designer.cs">
-      <DependentUpon>MaterialCollisionPicker.cs</DependentUpon>
-    </Compile>
-    <Compile Include="MaterialSelection\MaterialGridView.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="MaterialSelection\MaterialGridView.Designer.cs">
-      <DependentUpon>MaterialGridView.cs</DependentUpon>
-    </Compile>
-    <Compile Include="MaterialSelection\MaterialSetForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="MaterialSelection\MaterialSetForm.Designer.cs">
-      <DependentUpon>MaterialSetForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="MaterialSelection\OdysseyCollisionPicker.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="MaterialSelection\OdysseyCollisionPicker.Designer.cs">
-      <DependentUpon>OdysseyCollisionPicker.cs</DependentUpon>
-    </Compile>
-    <Compile Include="MaterialSelection\SM3DWCollisionPicker.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="MaterialSelection\SM3DWCollisionPicker.Designer.cs">
-      <DependentUpon>SM3DWCollisionPicker.cs</DependentUpon>
-    </Compile>
-    <Compile Include="MaterialWindowSettings.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="LoadingWindow.resx">
-      <DependentUpon>LoadingWindow.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="MaterialSelection\MaterialSetForm.resx">
-      <DependentUpon>MaterialSetForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -132,6 +88,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="CollisionPresets\Mario Kart 8.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="CollisionPresets\Mario Kart Wii.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="CollisionPresets\Mario Odyssey.json">
@@ -163,6 +122,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\KclLibraryGUI\KclLibraryGUI.csproj">
+      <Project>{e3089e30-ff5d-475d-9b08-94a0eddab248}</Project>
+      <Name>KclLibraryGUI</Name>
+    </ProjectReference>
     <ProjectReference Include="..\KclLibrary\KclLibrary.csproj">
       <Project>{df592cbe-8971-4445-8334-22a182a53a90}</Project>
       <Name>KclLibrary</Name>

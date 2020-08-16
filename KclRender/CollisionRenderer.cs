@@ -42,14 +42,18 @@ namespace CollisionGUI
                 in vec4 color;
                 in float vertexID;
 
-                uniform float pickedFace;
+                uniform int pickedFaces[50];
 
 				out vec4 FragColor;
 
 				void main(){
                     vec4 highlighted = vec4(1);
-                    if (vertexID == pickedFace) {
-                          highlighted = vec4(1,0,0,1);
+
+                    for (int i = 0; i < 50; i++)
+                    {
+                        if (vertexID == pickedFaces[i]) {
+                              highlighted = vec4(1,0,0,1);
+                        }
                     }
 
                     vec3 displayNormal = (normal.xyz * 0.5) + 0.5;
@@ -239,11 +243,14 @@ namespace CollisionGUI
         {
             GL.Disable(EnableCap.CullFace);
 
-            Shader.SetFloat("pickedFace", -1);
+            for (int i = 0; i < 50; i++)
+                Shader.SetInt($"pickedFaces[{i}]", -1);
+
+            int index = 0;
             foreach (var model in KclFile.Models)
             {
                 foreach (var prisim in model.HitPrisims) {
-                    Shader.SetFloat("pickedFace", prisim.GlobalIndex);
+                    Shader.SetInt($"pickedFaces[{index++}]", (int)prisim.GlobalIndex);
                 }
             }
 

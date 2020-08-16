@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace KCLExt
+namespace KclLibraryGUI
 {
     public partial class MaterialGridView : UserControl
     {

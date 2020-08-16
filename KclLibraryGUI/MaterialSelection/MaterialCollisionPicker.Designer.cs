@@ -1,4 +1,4 @@
-﻿namespace KCLExt
+﻿namespace KclLibraryGUI
 {
     partial class MaterialCollisionPicker
     {

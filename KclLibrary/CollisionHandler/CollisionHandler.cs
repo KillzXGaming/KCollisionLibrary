@@ -35,7 +35,6 @@ namespace KclLibrary
 
                 var position = model.Positions[prism.PositionIndex];
                 position = point - position; //Local coordinates
-
                 var edgeNormal1 = model.Normals[prism.Normal1Index];
                 if (Vector3.Dot(position, edgeNormal1) > 0)
                     continue;
@@ -50,8 +49,8 @@ namespace KclLibrary
 
                 var faceNormal = model.Normals[prism.DirectionIndex];
                 float dist = -Vector3.Dot(faceNormal, point);
-                if (dist < 0.0f || dist > maxDistance)
-                    continue;
+                // if (dist < 0.0f || dist > maxDistance)
+                //     continue;
 
                 model.HitPrisims.Add(prism);
 

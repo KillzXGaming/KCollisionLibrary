@@ -7,10 +7,9 @@ using System.Linq;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using KclImporter;
 using KclLibrary;
 
-namespace KCLExt
+namespace KclLibraryGUI
 {
     public partial class MaterialSetForm : Form
     {
@@ -46,22 +45,13 @@ namespace KCLExt
             Materials = mats;
             InitializeComponent();
 
+            if (MaterialWindowSettings.UsePresetEditor)
+                chkPresetTypeEditor.Checked = true;
+
             for (int i = 0; i < Materials.Length; i++)
                 MatCollisionList.Add(new CollisionEntry(Materials[i]));
             for (int i = 0; i < Meshes.Length; i++)
                 MeshCollisionList.Add(new CollisionEntry(Meshes[i]));
-
-            foreach (var preset in CollisionPresetData.CollisionPresets)
-            {
-                var item = new ToolStripMenuItem(preset.GameTitle,
-                    null, GamePresetToolStripMenuItem_Click);
-
-                gameSelectToolStripMenuItem.DropDownItems.Add(item);
-
-                if (MaterialWindowSettings.GamePreset == preset.GameTitle) {
-                    item.PerformClick();
-                }
-            }
 
             foreach (var platform in Platforms)
             {
@@ -74,6 +64,21 @@ namespace KCLExt
                     item.PerformClick();
                 }
             }
+
+            foreach (var preset in CollisionPresetData.CollisionPresets)
+            {
+                var item = new ToolStripMenuItem(preset.GameTitle,
+                    null, GamePresetToolStripMenuItem_Click);
+
+                gameSelectToolStripMenuItem.DropDownItems.Add(item);
+
+                if (MaterialWindowSettings.GamePreset == "Default" ||
+                    MaterialWindowSettings.GamePreset == preset.GameTitle &&
+                    MaterialWindowSettings.Platform == preset.Platform) {
+                    item.PerformClick();
+                }
+            }
+
 
             radioBtnMats.Checked = true;
             SetMaterialEditor();
@@ -198,6 +203,12 @@ namespace KCLExt
                 MessageBox.Show("Make sure to choose a game preset first!");
                 return;
             }
+
+            //Apply current setting for next usage
+            MaterialWindowSettings.GamePreset = ActiveGamePreset.GameTitle;
+            if (ActiveGamePlatform != string.Empty)
+                MaterialWindowSettings.Platform = ActiveGamePlatform;
+            MaterialWindowSettings.UsePresetEditor = chkPresetTypeEditor.Checked;
 
             if (DataGridView != null)
             {

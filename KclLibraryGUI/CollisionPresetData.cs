@@ -5,7 +5,7 @@ using System.IO;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 
-namespace KCLExt
+namespace KclLibraryGUI
 {
     public class CollisionPresetData
     {
@@ -48,6 +48,7 @@ namespace KCLExt
 
         public static void LoadPresets(string[] filePaths)
         {
+            CollisionPresets.Clear();
             for (int i = 0; i < filePaths.Length; i++)
             {
                 CollisionPresets.Add(JsonConvert.DeserializeObject<CollisionPresetData>(

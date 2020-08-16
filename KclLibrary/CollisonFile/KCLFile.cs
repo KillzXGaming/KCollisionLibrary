@@ -41,14 +41,20 @@ namespace KclLibrary
         /// Loads the data from the given file.
         /// </summary>
         /// <param name="fileName">The name of the file to load the data from.</param>
-        /// <param name="loadOctree"><c>true</c> to also load the octree referencing models.</param>
         public KCLFile(string fileName) : base()
         {
-            Transform = Matrix4x4.CreateScale(new Vector3(0.01f, 0.01f, 0.01f));
-
             using (FileStream stream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read)) {
                 Load(stream);
             }
+        }
+
+        /// <summary>
+        /// Loads the data from the given stream.
+        /// </summary>
+        /// <param name="fileName">The name of the file to load the data from.</param>
+        public KCLFile(Stream stream) : base()
+        {
+            Load(stream);
         }
 
         // ---- PROPERTIES ---------------------------------------------------------------------------------------------
@@ -272,6 +278,13 @@ namespace KclLibrary
         /// <returns></returns>
         public KCLHit CheckHit(Vector3 point)
         {
+            foreach (var model in Models)
+            {
+                model.HitOctrees.Clear();
+                model.HitPrisims.Clear();
+            }
+
+
             point = CollisionHandler.ConvertLocalSpace(Transform, point);
             if (Models.Count == 1) return Models[0].CheckHit(point);
 

@@ -1,6 +1,6 @@
-﻿namespace KCLExt
+﻿namespace KclLibraryGUI
 {
-    partial class SM3DWCollisionPicker
+    partial class OdysseyCollisionPicker
     {
         /// <summary> 
         /// Required designer variable.
@@ -42,6 +42,8 @@
             this.floorCodeCB = new System.Windows.Forms.ComboBox();
             this.label4 = new System.Windows.Forms.Label();
             this.wallCodeCB = new System.Windows.Forms.ComboBox();
+            this.label5 = new System.Windows.Forms.Label();
+            this.materialPrefixCodeCB = new System.Windows.Forms.ComboBox();
             this.SuspendLayout();
             // 
             // listView1
@@ -153,7 +155,7 @@
             // 
             this.label4.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(290, 344);
+            this.label4.Location = new System.Drawing.Point(3, 371);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(31, 13);
             this.label4.TabIndex = 8;
@@ -163,16 +165,38 @@
             // 
             this.wallCodeCB.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.wallCodeCB.FormattingEnabled = true;
-            this.wallCodeCB.Location = new System.Drawing.Point(347, 341);
+            this.wallCodeCB.Location = new System.Drawing.Point(60, 368);
             this.wallCodeCB.Name = "wallCodeCB";
             this.wallCodeCB.Size = new System.Drawing.Size(190, 21);
             this.wallCodeCB.TabIndex = 7;
             this.wallCodeCB.SelectedIndexChanged += new System.EventHandler(this.EditItem);
             // 
-            // SM3DWCollisionPicker
+            // label5
+            // 
+            this.label5.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(270, 344);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(76, 13);
+            this.label5.TabIndex = 10;
+            this.label5.Text = "Material Prefix:";
+            // 
+            // materialPrefixCodeCB
+            // 
+            this.materialPrefixCodeCB.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.materialPrefixCodeCB.FormattingEnabled = true;
+            this.materialPrefixCodeCB.Location = new System.Drawing.Point(347, 341);
+            this.materialPrefixCodeCB.Name = "materialPrefixCodeCB";
+            this.materialPrefixCodeCB.Size = new System.Drawing.Size(190, 21);
+            this.materialPrefixCodeCB.TabIndex = 9;
+            this.materialPrefixCodeCB.SelectedIndexChanged += new System.EventHandler(this.EditItem);
+            // 
+            // OdysseyCollisionPicker
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.label5);
+            this.Controls.Add(this.materialPrefixCodeCB);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.wallCodeCB);
             this.Controls.Add(this.label3);
@@ -182,7 +206,7 @@
             this.Controls.Add(this.materialCodeCB);
             this.Controls.Add(this.cameraCodeCB);
             this.Controls.Add(this.listView1);
-            this.Name = "SM3DWCollisionPicker";
+            this.Name = "OdysseyCollisionPicker";
             this.Size = new System.Drawing.Size(667, 397);
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -204,6 +228,8 @@
         private System.Windows.Forms.ComboBox floorCodeCB;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.ComboBox wallCodeCB;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.ComboBox materialPrefixCodeCB;
         private System.Windows.Forms.ColumnHeader columnHeader5;
     }
 }

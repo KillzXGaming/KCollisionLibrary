@@ -9,9 +9,9 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using ByamlExt.Byaml;
 
-namespace KCLExt
+namespace KclLibraryGUI
 {
-    public partial class SM3DWCollisionPicker : UserControl
+    public partial class OdysseyCollisionPicker : UserControl
     {
         bool ItemLoaded = false;
 
@@ -27,7 +27,7 @@ namespace KCLExt
 
         public bool UseObjectMaterials => ParentEditor.UseObjectMaterials;
 
-        public SM3DWCollisionPicker(MaterialSetForm parentForm)
+        public OdysseyCollisionPicker(MaterialSetForm parentForm)
         {
             InitializeComponent();
 
@@ -45,10 +45,14 @@ namespace KCLExt
             foreach (string val in MaterialCodes.Keys)
                 materialCodeCB.Items.Add(val);
 
+            foreach (string val in MaterialPrefixCodes.Keys)
+                materialPrefixCodeCB.Items.Add(val);
+
             cameraCodeCB.SelectedItem = "NoThrough";
             floorCodeCB.SelectedItem = "Ground";
             wallCodeCB.SelectedItem = "Wall";
             materialCodeCB.SelectedItem = "NoCode";
+            materialPrefixCodeCB.SelectedIndex = 0;
         }
 
         public void ReloadDataList()
@@ -59,6 +63,7 @@ namespace KCLExt
             floorCodeCB.SelectedItem = "Ground";
             wallCodeCB.SelectedItem = "Wall";
             materialCodeCB.SelectedItem = "NoCode";
+            materialPrefixCodeCB.SelectedIndex = 0;
 
             if (UseObjectMaterials)
             {
@@ -88,7 +93,10 @@ namespace KCLExt
             item.Text = entry.Name;
             item.SubItems.Add(entry.CameraCode);
             item.SubItems.Add(entry.FloorCode);
-            item.SubItems.Add(entry.MaterialCode);
+            if (entry.MaterialPrefixCode != "NONE")
+                item.SubItems.Add($"{entry.MaterialPrefixCode}_{entry.MaterialCode}");
+            else
+                item.SubItems.Add($"{entry.MaterialCode}");
             item.SubItems.Add(entry.WallCode);
         }
 
@@ -99,6 +107,7 @@ namespace KCLExt
             public string CameraCode = "NoThrough";
             public string FloorCode = "Ground";
             public string MaterialCode = "NONE";
+            public string MaterialPrefixCode = "NONE";
             public string WallCode = "Wall";
 
             public CollisionEntry(string name)
@@ -116,6 +125,7 @@ namespace KCLExt
                 x.CameraCode == entries[i].CameraCode &&
                 x.FloorCode == entries[i].FloorCode &&
                 x.MaterialCode == entries[i].MaterialCode &&
+                x.MaterialPrefixCode == entries[i].MaterialPrefixCode &&
                 x.WallCode == entries[i].WallCode))
                 {
                     col.Add(entries[i]);
@@ -143,6 +153,7 @@ namespace KCLExt
                 x.FloorCode == entries[i].FloorCode &&
                 x.CameraCode == entries[i].CameraCode &&
                 x.MaterialCode == entries[i].MaterialCode &&
+                x.MaterialPrefixCode == entries[i].MaterialPrefixCode &&
                 x.WallCode == entries[i].WallCode
                 );
 
@@ -162,29 +173,22 @@ namespace KCLExt
             foreach (var entry in col)
             {
                 IDictionary<string, dynamic> colCodes = new Dictionary<string, dynamic>();
-
-                colCodes.Add("CameraCode", CreateEntry(CameraCodes, entry.CameraCode));
-                colCodes.Add("FloorCode", CreateEntry(FloorCodes, entry.FloorCode));
-                colCodes.Add("MaterialCode", CreateEntry(MaterialCodes, entry.MaterialCode));
-                colCodes.Add("WallCode", CreateEntry(WallCodes, entry.WallCode));
+                colCodes.Add("CameraCode", CameraCodes[entry.CameraCode]);
+                colCodes.Add("FloorCode", FloorCodes[entry.FloorCode]);
+                if (entry.MaterialPrefixCode != "NONE")
+                    colCodes.Add("MaterialCodePrefix", MaterialPrefixCodes[entry.MaterialPrefixCode]);
+                colCodes.Add("MaterialCode", MaterialCodes[entry.MaterialCode]);
+                colCodes.Add("WallCode", WallCodes[entry.WallCode]);
                 root.Add(colCodes);
             }
 
             var byml = new BymlFileData();
-            byml.byteOrder = Syroot.BinaryData.ByteOrder.BigEndian;
-            byml.Version = 1;
+            byml.byteOrder = Syroot.BinaryData.ByteOrder.LittleEndian;
+            byml.Version = 3;
             byml.SupportPaths = false;
             byml.RootNode = root;
 
             return byml;
-        }
-
-        private List<dynamic> CreateEntry(Dictionary<string, int> dictionary, string key)
-        {
-            List<dynamic> list = new List<dynamic>();
-            list.Add(key);
-            list.Add(dictionary[key]);
-            return list;
         }
 
         private void listView1_SelectedIndexChanged(object sender, EventArgs e)
@@ -197,6 +201,7 @@ namespace KCLExt
                 cameraCodeCB.SelectedItem = tag.CameraCode;
                 floorCodeCB.SelectedItem = tag.FloorCode;
                 materialCodeCB.SelectedItem = tag.MaterialCode;
+                materialPrefixCodeCB.SelectedItem = tag.MaterialPrefixCode;
                 wallCodeCB.SelectedItem = tag.WallCode;
 
                 ItemLoaded = true;
@@ -214,6 +219,7 @@ namespace KCLExt
                     tag.CameraCode = cameraCodeCB.SelectedItem.ToString();
                     tag.FloorCode = floorCodeCB.SelectedItem.ToString();
                     tag.MaterialCode = materialCodeCB.SelectedItem.ToString();
+                    tag.MaterialPrefixCode = materialPrefixCodeCB.SelectedItem.ToString();
                     tag.WallCode = wallCodeCB.SelectedItem.ToString();
 
                     UpdateListItem(item, tag);
@@ -223,67 +229,122 @@ namespace KCLExt
             }
         }
 
-        public Dictionary<string, int> CameraCodes = new Dictionary<string, int>()
+        public Dictionary<string, string> CameraCodes = new Dictionary<string, string>()
         {
-            { "NoThrough", 7 },
-            { "Through", 8 },
+            { "NONE",            "" },
+            { "InvalidThrough",  "CameraInvalidThrough" },
+            { "NoThrough",       "CameraNoThrough" },
+            { "NoThroughAlways", "CameraNoThroughAlways" },
+            { "Through",         "CameraThrough" },
         };
 
-        public Dictionary<string, int> FloorCodes = new Dictionary<string, int>()
+
+        public Dictionary<string, string> FloorCodes = new Dictionary<string, string>()
         {
-            { "ClimbSlope", 7 },
-            { "DamageFire", 2 },
-            { "Ground", 0 },
-            { "IgnoreTouch", 8 },
-            { "Needle", 1 },
-            { "Poison", 3 },
-            { "Skate", 6 },
-            { "Slide", 4 },
+            { "NONE", "" },
+            { "Bed", "Bed" },
+            { "Chair", "Chair" },
+            { "ClimbSlope", "ClimbSlope" },
+            { "DamageFire", "DamageFire" },
+            { "DamageFire2D", "DamageFire2D" },
+            { "Fence", "Fence" },
+            { "GrabCeil", "GrabCeil" },
+            { "Ground", "Ground" },
+            { "IgnoreTouch", "IgnoreTouch" },
+            { "Jump", "Jump" },
+            { "JumpSmall", "JumpSmall" },
+            { "Needle", "Needle" },
+            { "Poison", "Poison" },
+            { "Poison2D", "Poison2D" },
+            { "Pole", "Pole" },
+            { "Pole10", "Pole10" },
+            { "Pole20", "Pole20" },
+            { "Pole30Plus", "Pole30Plus" },
+            { "Press", "Press" },
+            { "Rolling", "Rolling" },
+            { "SandSink", "SandSink" },
+            { "Skate", "Skate" },
+            { "Slide", "Slide" },
+            { "Slip", "Slip" },
         };
 
-        public Dictionary<string, int> MaterialCodes = new Dictionary<string, int>()
+        public Dictionary<string, string> MaterialCodes = new Dictionary<string, string>()
         {
-            { "Ashore", 36 },
-            { "Carpet", 24 },
-            { "ChocoCream", 39 },
-            { "Cloth", 34 },
-            { "Cloud", 25 },
-            { "Cream", 38 },
-            { "EchoBlock", 49 },
-            { "FallenLeaves", 31 },
-            { "Glass", 33 },
-            { "Ice", 30 },
-            { "InSand", 21 },
-            { "InWater", 20 },
-            { "Kawara", 44 },
-            { "LavaBlue", 43 },
-            { "LavaRed", 42 },
-            { "Lawn", 11 },
-            { "LawnPink", 46 },
-            { "Marble", 23 },
-            { "Metal", 12 },
-            { "MetalHeavy", 15 },
-            { "NoCode", 99 },
-            { "Puddle", 40 },
-            { "Sand", 14 },
-            { "Snow", 18 },
-            { "Soil", 10 },
-            { "SpacePuddle", 51 },
-            { "SqueakWood", 45 },
-            { "Stone", 13 },
-            { "StoneWet", 32 },
-            { "Tatami", 48 },
-            { "TouchPoint", 41 },
-            { "W5Puddle", 50 },
-            { "WoodThick", 16 },
-            { "WoodThin", 17 },
-            { "WoodWet", 35 },
+            { "NONE", "" },
+            { "Carpet","Carpet" },
+            { "Cloth","Cloth" },
+            { "Cloud","Cloud" },
+            { "ColNoEffect","ColNoEffect" },
+            { "ExStarCube","ExStarCube" },
+            { "FlowerForest","FlowerForest" },
+            { "FlowerPeach","FlowerPeach" },
+            { "Glass","Glass" },
+            { "Gravel","Gravel" },
+            { "Ice","Ice" },
+            { "Kawara","Kawara" },
+            { "LavaMarble","LavaMarble" },
+            { "LavaPink","LavaPink" },
+            { "LavaRed","LavaRed" },
+            { "LavaWhite","LavaWhite" },
+            { "Lawn","Lawn" },
+            { "LawnCap","LawnCap" },
+            { "LawnCapTower","LawnCapTower" },
+            { "LawnDarkGreen","LawnDarkGreen" },
+            { "LawnDeep","LawnDeep" },
+            { "LawnDeepForest","LawnDeepForest" },
+            { "LawnDeepWaterfall","LawnDeepWaterfall" },
+            { "LawnForest","LawnForest" },
+            { "LawnWaterfall","LawnWaterfall" },
+            { "Marble","Marble" },
+            { "MarioCube","MarioCube" },
+            { "Metal","Metal" },
+            { "MetalHeavy","MetalHeavy" },
+            { "MetalLawn","MetalLawn" },
+            { "NoCode","NoCode" },
+            { "NoCollide","NoCollide" },
+            { "PoisonWater","PoisonWater" },
+            { "Puddle","Puddle" },
+            { "Salt","Salt" },
+            { "Sand","Sand" },
+            { "SandDesert","SandDesert" },
+            { "SandLake","SandLake" },
+            { "SandMoon","SandMoon" },
+            { "SandSea","SandSea" },
+            { "Snow","Snow" },
+            { "SnowDeep","SnowDeep" },
+            { "Soil","Soil" },
+            { "SoilSoft","SoilSoft" },
+            { "SqueakWood","SqueakWood" },
+            { "Stone","Stone" },
+            { "StoneRough","StoneRough" },
+            { "Tatami","Tatami" },
+            { "WoodThick","WoodThick" },
+            { "WoodThin","WoodThin" },
         };
 
-        public Dictionary<string, int> WallCodes = new Dictionary<string, int>()
+        public Dictionary<string, string> MaterialPrefixCodes = new Dictionary<string, string>()
         {
-            { "NoAction", 6 },
-            { "Wall", 5 },
+            { "NONE", "" },
+            { "InWater","InWater" },
+            { "Shallow","Shallow" },
+            { "Wet","Wet" },
+        };
+
+        public Dictionary<string, string> WallCodes = new Dictionary<string, string>()
+        {
+            { "NONE", "" },
+            { "NoAction","NoAction" },
+            { "NoCeilGrab","NoCeilGrab" },
+            { "NoCeilSquat","NoCeilSquat" },
+            { "NoClimbPole","NoClimbPole" },
+            { "NoClingTongue","NoClingTongue" },
+            { "NoTraceStick","NoTraceStick" },
+            { "NoWallGrab","NoWallGrab" },
+            { "OnlyWallHitDown","OnlyWallHitDown" },
+            { "ReflectStick","ReflectStick" },
+            { "ReflectStickNoWallGrab","ReflectStickNoWallGrab" },
+            { "ThroughStick","ThroughStick" },
+            { "Wall","Wall" },
         };
     }
 }
