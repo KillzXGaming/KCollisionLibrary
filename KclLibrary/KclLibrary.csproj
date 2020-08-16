@@ -1,9 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
+    <Authors>Syroot</Authors>
+    <Copyright>(c) Syroot, licensed under MIT</Copyright>
+    <Description>.NET library for loading and modifying KCL binary files.</Description>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <TargetFrameworks>netstandard2.1;net46</TargetFrameworks>
   </PropertyGroup>
-
   <ItemGroup>
     <Reference Include="Syroot.BinaryData">
       <HintPath>..\Syroot.BinaryData.dll</HintPath>
