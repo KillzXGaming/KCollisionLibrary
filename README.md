@@ -3,7 +3,7 @@
 ## Projects
 - KclImporter (A executable program used for importing and exporting collision models)
 - KclLibraryGUI (A library for gui handling importing and configuring material attributes)
-= KclRender (A 3D view displaying collision models and hit detection of octree boundings)
+- KclRender (A 3D view displaying collision models and hit detection of octree boundings)
 - KclLibrary (The main collision library for handling the file binaries, hit detection, etc)
 
 ## Features
