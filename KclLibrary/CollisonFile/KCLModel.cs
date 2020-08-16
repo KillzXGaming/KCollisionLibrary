@@ -222,14 +222,14 @@ namespace KclLibrary
         /// Creates a triangle with 3 positions from the given collision prism.
         /// </summary>
         /// <returns></returns>
-        public Triangle GetTriangle(KclPrism Prism)
+        public Triangle GetTriangle(KclPrism prism)
         {
-            Vector3 A = Positions[Prism.PositionIndex];
-            Vector3 CrossA = Vector3.Cross(Normals[Prism.Normal1Index], Normals[Prism.DirectionIndex]);
-            Vector3 CrossB = Vector3.Cross(Normals[Prism.Normal2Index], Normals[Prism.DirectionIndex]);
-            Vector3 B = A + CrossB * (Prism.Length / Vector3.Dot(CrossB, Normals[Prism.Normal3Index]));
-            Vector3 C = A + CrossA * (Prism.Length / Vector3.Dot(CrossA, Normals[Prism.Normal3Index]));
-            return new Triangle(A, B, C);
+            Vector3 A = Positions[prism.PositionIndex];
+            Vector3 CrossA = Vector3.Cross(Normals[prism.Normal1Index], Normals[prism.DirectionIndex]);
+            Vector3 CrossB = Vector3.Cross(Normals[prism.Normal2Index], Normals[prism.DirectionIndex]);
+            Vector3 B = A + CrossB * (prism.Length / Vector3.Dot(CrossB, Normals[prism.Normal3Index]));
+            Vector3 C = A + CrossA * (prism.Length / Vector3.Dot(CrossA, Normals[prism.Normal3Index]));
+            return new Triangle(A, B, C) { Attribute = prism.CollisionFlags };
         }
 
         public KCLHit CheckHit(Vector3 point)
