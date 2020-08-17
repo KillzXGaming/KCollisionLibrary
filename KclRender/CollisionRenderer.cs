@@ -36,23 +36,28 @@ namespace CollisionGUI
 
         public override void Prepare(GL_ControlModern control)
         {
+            if (Shader != null && Shader.programs.ContainsKey(control)) return;
+
             var solidColorFrag = new FragmentShader(
            @"#version 330
-                in vec3 normal;
                 in vec3 position;
+                in vec3 normal;
                 in vec4 color;
                 in float vertexID;
+
+                uniform int colorOverride;
 
                 uniform int pickedFaces[50];
 
 				out vec4 FragColor;
 
 				void main(){
-                    vec4 highlighted = vec4(1);
+                    int pick = int(vertexID);
 
-                    for (int i = 0; i < 50; i++)
+                    vec4 highlighted = vec4(1);
+                    for (int i = 0; i < 1; i++)
                     {
-                        if (vertexID == pickedFaces[i]) {
+                        if (pick == pickedFaces[i]) {
                               highlighted = vec4(1,0,0,1);
                         }
                     }
@@ -61,6 +66,8 @@ namespace CollisionGUI
                     float halfLambert = max(displayNormal.y,0.5);
 
                     FragColor = vec4(vec3(color.rgb * halfLambert), 1.0f) * highlighted;
+                    if (colorOverride == 1)
+                        FragColor = vec4(0,0,0,1);
 				}");
 
             var solidColorVert = new VertexShader(
@@ -70,8 +77,8 @@ namespace CollisionGUI
                 layout(location = 2) in vec4 vColor;
                 layout(location = 3) in float vIndex;
 
-                out vec3 normal;
                 out vec3 position;
+                out vec3 normal;
                 out vec4 color;
                 out float vertexID;
 
@@ -79,8 +86,8 @@ namespace CollisionGUI
 				uniform mat4 mtxCam;
 
 				void main(){
-                    normal = vNormal;
 	                position = vPosition;
+                    normal = vNormal;
 	                color = vColor;
 	                vertexID = vIndex;
 
@@ -142,8 +149,10 @@ namespace CollisionGUI
                                 (byte)color.W
                         }, 0));
                         vertexData.Add(faceIndex);
+
+                        if (i % 3 == 0)
+                            faceIndex++;
                     }
-                    faceIndex++;
                 }
             }
 
@@ -153,11 +162,11 @@ namespace CollisionGUI
 
             GL.BindBuffer(BufferTarget.ArrayBuffer, vaoBuffer);
             GL.BufferData(BufferTarget.ArrayBuffer, bufferData.Length * 4, bufferData, BufferUsageHint.StaticDraw);
-        }
+        }   
 
         public override void DrawModel(GL_ControlModern control, EditorSceneBase editorScene, Pass pass, Vector4 highlightColor)
         {
-            if (pass != Pass.OPAQUE)
+            if (pass != Pass.OPAQUE || Shader == null)
                 return;
 
             var modelMatrix = new Matrix4(
@@ -171,10 +180,7 @@ namespace CollisionGUI
 
             Draw(control);
 
-            GL.UseProgram(0);
-            GL.Disable(EnableCap.DepthTest);
-            GL.Enable(EnableCap.DepthTest);
-            GL.Enable(EnableCap.CullFace);
+            return;
 
             Matrix4 camMat = modelMatrix * control.CameraMatrix * control.ProjectionMatrix;
             DrawOctrees(ref camMat);
@@ -247,6 +253,8 @@ namespace CollisionGUI
             for (int i = 0; i < 50; i++)
                 Shader.SetInt($"pickedFaces[{i}]", -1);
 
+            Console.WriteLine($"Hits {KclFile.Models.Sum(x => x.HitPrisms.Count)}");
+
             int index = 0;
             foreach (var model in KclFile.Models)
             {
@@ -257,8 +265,16 @@ namespace CollisionGUI
 
             vao.Enable(control);
             vao.Use(control);
-            GL.DrawArrays(PrimitiveType.Triangles, 0, IndicesLength);
 
+            Shader.SetInt("colorOverride", 1);
+            GL.PolygonMode(MaterialFace.Front, PolygonMode.Line);
+            GL.Enable(EnableCap.LineSmooth);
+            GL.LineWidth(1.5f);
+            GL.DrawArrays(PrimitiveType.Triangles, 0, IndicesLength);
+            GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
+            Shader.SetInt("colorOverride", 0);
+
+            GL.DrawArrays(PrimitiveType.Triangles, 0, IndicesLength);
             GL.Enable(EnableCap.CullFace);
         }
     }

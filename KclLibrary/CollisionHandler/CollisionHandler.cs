@@ -27,6 +27,9 @@ namespace KclLibrary
             if ((x & model.CoordinateMask.X) != 0 || (y & model.CoordinateMask.Y) != 0 || (z & model.CoordinateMask.Z) != 0)
                 return null;
 
+            float smallestDist = float.MaxValue;
+            KCLHit closestHit = null;
+
             var prismIndices = searchBlock(model, x, y, z);
             for (int i = 0; i < prismIndices.Length; i++) {
                 var prism = model.Prisms[prismIndices[i]];
@@ -52,17 +55,21 @@ namespace KclLibrary
                 // if (dist < 0.0f || dist > maxDistance)
                 //     continue;
 
-                model.HitPrisms.Add(prism);
-
-                //Return with a proper hit with all checks passed.
-                return new KCLHit()
+                if (dist < smallestDist)
                 {
-                    Prism = prism,
-                    Distance = dist,
-                };
+                    model.HitPrisms.Add(prism);
+                    smallestDist = dist;
+
+                    //Return with a proper hit with all checks passed.
+                    closestHit = new KCLHit()
+                    {
+                        Prism = prism,
+                        Distance = dist,
+                    };
+                }
             }
 
-            return null;
+            return closestHit;
         }
 
         internal static ushort[] searchBlock(KCLModel model,  int x, int y, int z)

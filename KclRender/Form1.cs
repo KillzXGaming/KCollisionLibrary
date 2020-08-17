@@ -14,6 +14,7 @@ using GL_EditorFramework.Interfaces;
 using OpenTK;
 using KclLibrary;
 using GL_EditorFramework.StandardCameras;
+using OpenTK.Graphics.ES10;
 
 namespace CollisionGUI
 {
@@ -42,13 +43,24 @@ namespace CollisionGUI
             Scene = new EditorScene();
 
             glControl.MouseMove += glControl_MouseMove;
+            glControl.MouseDown += glControl_MouseDown;
             glControl.MainDrawable = Scene;
+        }
+
+        private void glControl_MouseDown(object sender, MouseEventArgs e)
+        {
+        }
+
+        private void DoRayCast()
+        {
+            if (KclFile == null) return;
+
+            Vector3 pos = -glControl.GetPointUnderMouse();
+            var hit2 = KclFile.CheckHit(new System.Numerics.Vector3(pos.X, pos.Y, pos.Z));
         }
 
         private void glControl_MouseMove(object sender, MouseEventArgs e)
         {
-            if (KclFile == null || Scene.SelectedObjects.Count == 0) return;
-
             foreach (var obj in collidableObjects) {
                 var hit = KclFile.CheckHit(new System.Numerics.Vector3(obj.CurrentPosition.X, obj.CurrentPosition.Y, obj.CurrentPosition.Z));
                 if (hit != null)
@@ -56,6 +68,7 @@ namespace CollisionGUI
                 else
                     obj.IsColliding = false;
             }
+            glControl.Invalidate();
         }
 
         private void openToolStripMenuItem_Click(object sender, EventArgs e)

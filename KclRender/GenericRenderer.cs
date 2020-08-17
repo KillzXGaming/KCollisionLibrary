@@ -78,7 +78,7 @@ namespace CollisionGUI
 
         public override void Draw(GL_ControlModern control, Pass pass, EditorSceneBase editorScene)
         {
-            if (!ObjectRenderState.ShouldBeDrawn(this))
+            if (!ObjectRenderState.ShouldBeDrawn(this) || pass != Pass.OPAQUE)
                 return;
 
             bool hovered = editorScene.Hovered == this;

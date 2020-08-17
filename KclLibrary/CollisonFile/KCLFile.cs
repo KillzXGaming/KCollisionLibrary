@@ -278,14 +278,13 @@ namespace KclLibrary
         /// <returns></returns>
         public KCLHit CheckHit(Vector3 point)
         {
-            foreach (var model in Models)
-            {
+            foreach (var model in Models) {
                 model.HitOctrees.Clear();
                 model.HitPrisms.Clear();
             }
 
-
             point = CollisionHandler.ConvertLocalSpace(Transform, point);
+            //Model only has one model to search, check directly instead
             if (Models.Count == 1) return Models[0].CheckHit(point);
 
             //Check total bounding area
