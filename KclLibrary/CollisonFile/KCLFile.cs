@@ -273,15 +273,23 @@ namespace KclLibrary
         }
 
         /// <summary>
+        /// Resets the list of prisim and octree data for any that has been previously hit.
+        /// </summary>
+        public void ResetHits()
+        {
+            for (int i = 0; i < Models.Count; i++) {
+                Models[i].HitPrisms.Clear();
+                Models[i].HitOctrees.Clear();
+            }
+        }
+
+        /// <summary>
         /// Checks if a prism gets hit from a given point and returns hit information.
         /// </summary>
         /// <returns></returns>
         public KCLHit CheckHit(Vector3 point)
         {
-            foreach (var model in Models) {
-                model.HitOctrees.Clear();
-                model.HitPrisms.Clear();
-            }
+            ResetHits();
 
             point = CollisionHandler.ConvertLocalSpace(Transform, point);
             //Model only has one model to search, check directly instead
@@ -305,6 +313,8 @@ namespace KclLibrary
 
             return null;
         }
+
+        // ---- METHODS (PRIVATE) -------------------------------------------------------------------------------------
 
         private ModelOctreeNode SearchModelBlock(ModelOctreeNode[] children, Vector3 point, Vector3 position, Vector3 boxSize)
         {
@@ -333,9 +343,6 @@ namespace KclLibrary
             }
             return null;
         }
-
-        // ---- METHODS (PRIVATE) -------------------------------------------------------------------------------------
-
 
         private void PrintModelOctree(ModelOctreeNode[] children, string indent = "") {
             int index = 0;
