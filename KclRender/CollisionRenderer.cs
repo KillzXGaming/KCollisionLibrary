@@ -180,8 +180,6 @@ namespace CollisionGUI
 
             Draw(control);
 
-            return;
-
             Matrix4 camMat = modelMatrix * control.CameraMatrix * control.ProjectionMatrix;
             DrawOctrees(ref camMat);
         }
