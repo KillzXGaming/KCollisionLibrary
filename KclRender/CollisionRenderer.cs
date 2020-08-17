@@ -8,7 +8,7 @@ using OpenTK;
 using GL_EditorFramework.GL_Core;
 using GL_EditorFramework;
 using OpenTK.Graphics.OpenGL;
-using OpenTK;
+using System.Drawing;
 using GL_EditorFramework.Interfaces;
 using GL_EditorFramework.EditorDrawables;
 
@@ -20,14 +20,25 @@ namespace CollisionGUI
 
         private VertexArrayObject vao;
 
+        public Dictionary<ushort, Color> ColorList = new Dictionary<ushort, Color>();
+
         public CollisionRenderer(string fileName) :
             base(Vector3.Zero, Vector3.Zero, Vector3.One)
         {
             KclFile = new KCLFile(fileName);
             KclFile.Transform = System.Numerics.Matrix4x4.CreateScale(0.01f);
+
+            Random r = new Random();
+            foreach (var model in KclFile.Models)
+            {
+                foreach (var prisim in model.Prisms)
+                {
+                }
+            }
         }
 
         public int IndicesLength;
+        public int IndicesSelectionLength;
 
         public ShaderProgram defaultShaderProgram;
         public ShaderProgram solidColorShaderProgram;
@@ -43,24 +54,17 @@ namespace CollisionGUI
                 in vec3 position;
                 in vec3 normal;
                 in vec4 color;
-                in float vertexID;
 
+                uniform int selectionOverride;
                 uniform int colorOverride;
-
-                uniform int pickedFaces[50];
 
 				out vec4 FragColor;
 
 				void main(){
-                    int pick = int(vertexID);
-
                     vec4 highlighted = vec4(1);
-                    for (int i = 0; i < 1; i++)
-                    {
-                        if (pick == pickedFaces[i]) {
-                              highlighted = vec4(1,0,0,1);
-                        }
-                    }
+                     if (selectionOverride == 1) {
+                         highlighted = vec4(1,0,0,1);
+                      }
 
                     vec3 displayNormal = (normal.xyz * 0.5) + 0.5;
                     float halfLambert = max(displayNormal.y,0.5);
@@ -80,7 +84,6 @@ namespace CollisionGUI
                 out vec3 position;
                 out vec3 normal;
                 out vec4 color;
-                out float vertexID;
 
 	            uniform mat4 mtxMdl;
 				uniform mat4 mtxCam;
@@ -89,7 +92,6 @@ namespace CollisionGUI
 	                position = vPosition;
                     normal = vNormal;
 	                color = vColor;
-	                vertexID = vIndex;
 
                     gl_Position = mtxCam * mtxMdl * vec4(vPosition.xyz, 1.0);
 				}");
@@ -99,11 +101,18 @@ namespace CollisionGUI
         }
 
         private int vaoBuffer;
+        private int iboBuffer;
+        private int iboSelBuffer;
 
         public void PrepareModel(GL_ControlBase control)
         {
+            int[] buffers = new int[3];
+
             //Load vao
-            vaoBuffer = GL.GenBuffer();
+            GL.GenBuffers(3, buffers);
+            vaoBuffer = buffers[0];
+            iboBuffer = buffers[1];
+            iboSelBuffer = buffers[2];
 
             vao = new VertexArrayObject(vaoBuffer);
             vao.AddAttribute(0, 3, VertexAttribPointerType.Float, false, 32, 0);
@@ -117,6 +126,45 @@ namespace CollisionGUI
 
         public void Destroy() {
             GL.DeleteBuffer(vaoBuffer);
+            GL.DeleteBuffer(iboBuffer);
+            GL.DeleteBuffer(iboSelBuffer);
+        }
+
+        public void UpdateIndexBuffer()
+        {
+            List<int> indexBuffer = new List<int>();
+            List<int> selIndexBuffer = new List<int>();
+
+            int faceIndex = 0;
+            foreach (var model in KclFile.Models)
+            {
+                for (int i = 0; i < model.Prisms.Length; i++)
+                {
+                    if (model.HitPrisms.Contains(model.Prisms[i]))
+                    {
+                        selIndexBuffer.Add(faceIndex++);
+                        selIndexBuffer.Add(faceIndex++);
+                        selIndexBuffer.Add(faceIndex++);
+                    }
+                    else
+                    {
+                        indexBuffer.Add(faceIndex++);
+                        indexBuffer.Add(faceIndex++);
+                        indexBuffer.Add(faceIndex++);
+                    }
+                }
+            }
+
+            IndicesLength = indexBuffer.Count;
+            IndicesSelectionLength = selIndexBuffer.Count;
+
+            GL.BindBuffer(BufferTarget.ArrayBuffer, iboBuffer);
+            GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(indexBuffer.Count * sizeof(int)),
+             indexBuffer.ToArray(), BufferUsageHint.StaticDraw);
+
+            GL.BindBuffer(BufferTarget.ArrayBuffer, iboSelBuffer);
+            GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(selIndexBuffer.Count * sizeof(int)),
+             selIndexBuffer.ToArray(), BufferUsageHint.StaticDraw);
         }
 
         public void UpdateVertexData()
@@ -140,6 +188,10 @@ namespace CollisionGUI
                         vertexData.Add(triangle.Normal.Z);
 
                         Vector4 color = new Vector4(255, 255, 255,255);
+                        if (ColorList.ContainsKey(triangle.Attribute)) {
+                            var col = ColorList[triangle.Attribute];
+                            color = new Vector4(col.R, col.G, col.B, col.A);
+                        }
 
                         vertexData.Add(BitConverter.ToSingle(new byte[4]
                         {
@@ -158,7 +210,7 @@ namespace CollisionGUI
 
             float[] bufferData = vertexData.ToArray();
 
-            IndicesLength = (int)faceIndex * 3;
+            UpdateIndexBuffer();
 
             GL.BindBuffer(BufferTarget.ArrayBuffer, vaoBuffer);
             GL.BufferData(BufferTarget.ArrayBuffer, bufferData.Length * 4, bufferData, BufferUsageHint.StaticDraw);
@@ -246,20 +298,10 @@ namespace CollisionGUI
 
         private void Draw(GL_ControlBase control)
         {
+            if (KclFile.Models.Sum(x => x.HitPrisms.Count) > 0 || IndicesSelectionLength > 0)
+                UpdateIndexBuffer();
+
             GL.Disable(EnableCap.CullFace);
-
-            for (int i = 0; i < 50; i++)
-                Shader.SetInt($"pickedFaces[{i}]", -1);
-
-            Console.WriteLine($"Hits {KclFile.Models.Sum(x => x.HitPrisms.Count)}");
-
-            int index = 0;
-            foreach (var model in KclFile.Models)
-            {
-                foreach (var prism in model.HitPrisms) {
-                    Shader.SetInt($"pickedFaces[{index++}]", (int)prism.GlobalIndex);
-                }
-            }
 
             vao.Enable(control);
             vao.Use(control);
@@ -268,12 +310,29 @@ namespace CollisionGUI
             GL.PolygonMode(MaterialFace.Front, PolygonMode.Line);
             GL.Enable(EnableCap.LineSmooth);
             GL.LineWidth(1.5f);
-            GL.DrawArrays(PrimitiveType.Triangles, 0, IndicesLength);
+            Draw();
             GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
             Shader.SetInt("colorOverride", 0);
 
-            GL.DrawArrays(PrimitiveType.Triangles, 0, IndicesLength);
+            Draw();
             GL.Enable(EnableCap.CullFace);
+        }
+
+        private void Draw()
+        {
+            if (IndicesLength > 0)
+            {
+                Shader.SetInt("selectionOverride", 0);
+                GL.BindBuffer(BufferTarget.ElementArrayBuffer, iboBuffer);
+                GL.DrawElements(BeginMode.Triangles, IndicesLength, DrawElementsType.UnsignedInt, 0);
+            }
+            if (IndicesSelectionLength > 0)
+            {
+                Shader.SetInt("selectionOverride", 1);
+                GL.BindBuffer(BufferTarget.ElementArrayBuffer, iboSelBuffer);
+                GL.DrawElements(BeginMode.Triangles, IndicesSelectionLength, DrawElementsType.UnsignedInt, 0);
+                Shader.SetInt("selectionOverride", 0);
+            }
         }
     }
 }
