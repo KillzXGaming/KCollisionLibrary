@@ -20,6 +20,8 @@
 
 Library by Syroot & KillXGaming.
 
+Thanks to MasterF0x for the first V2 KCL implimentation and exelix11 for some help with odyssey support.
+
 Thanks to Syroot/Ray Koopa for the [original library base](https://gitlab.com/Syroot/NintenTools/MarioKart8/-/tree/master/src/Syroot.NintenTools.MarioKart8/Collisions).
 
 
