@@ -15,6 +15,7 @@
 
 ## Planned
 - Functional collision handling for in tool editors (currently somewhat functional but needs improvements).
+- Automatic .obj triangulation.
 
 ## Credits
 
