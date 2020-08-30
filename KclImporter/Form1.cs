@@ -35,12 +35,19 @@ namespace KclImporter
 
                     var thread = new Thread(() =>
                     {
-                        var result = CollisionLoader.CreateCollisionFromObject(this, file);
+                        try
+                        {
+                            var result = CollisionLoader.CreateCollisionFromObject(this, file);
                             this.Invoke((MethodInvoker)delegate
                             {
                                 if (result.KclFie != null)
                                     CollisionLoader.SaveKCL(result.KclFie, file, result.AttributeByml);
                             });
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show(ex.ToString());
+                        }
                         CollisionLoader.CloseConsole(this);
 
                     });
@@ -69,6 +76,11 @@ namespace KclImporter
         }
 
         private void ExportKCL()
+        {
+
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
         {
 
         }
