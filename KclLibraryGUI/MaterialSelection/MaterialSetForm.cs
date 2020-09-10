@@ -189,6 +189,11 @@ namespace KclLibraryGUI
                 Result = DataGridView.Result;
             else if (MaterialCollisionPicker != null)
                 Result = MaterialCollisionPicker.Result;
+            else if (SM3DWCollisionPicker != null)
+            {
+                Result = SM3DWCollisionPicker.Result;
+                AttributeByml = SM3DWCollisionPicker.GenerateByaml();
+            }
             else if (OdysseyCollisionPicker != null)
             {
                 Result = OdysseyCollisionPicker.Result;

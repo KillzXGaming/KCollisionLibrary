@@ -218,7 +218,7 @@ namespace KclLibraryGUI
 
                     UpdateListItem(item, tag);
                 }
-
+                    
                 listView1.Refresh();
             }
         }
@@ -243,6 +243,7 @@ namespace KclLibraryGUI
 
         public Dictionary<string, int> MaterialCodes = new Dictionary<string, int>()
         {
+            { "NONE", 0 },
             { "Ashore", 36 },
             { "Carpet", 24 },
             { "ChocoCream", 39 },
