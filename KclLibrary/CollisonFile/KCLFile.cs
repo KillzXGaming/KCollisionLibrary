@@ -249,9 +249,6 @@ namespace KclLibrary
             //Create subdivied triangle models
             var modelRoots = CreateModelDivision(MinCoordinate, triangles, boxSize / 2f);
 
-            //Optimize by merging exisitng models if possible
-          //  modelRoots = TryMergeModelGroups(modelRoots);
-
             //For a model octree, we need 8 octrees per division
             ModelOctreeRoot = new ModelOctreeNode();
             ModelOctreeRoot.Children = new ModelOctreeNode[ModelOctreeNode.ChildCount];
@@ -309,7 +306,12 @@ namespace KclLibrary
 
             var block = SearchModelBlock(ModelOctreeRoot.Children, point, MinCoordinate, boxSize);
             if (block != null && block.ModelIndex != null)
-                return Models[(int)block.ModelIndex].CheckHit(point);
+            {
+                var hit = Models[(int)block.ModelIndex].CheckHit(point);
+                if (hit != null) //Convert local space back to world with the current transformation
+                    hit.CenterY = Vector3.Transform(new Vector3(0, hit.CenterY, 0), Transform).Y;
+                return hit;
+            }
 
             return null;
         }
@@ -331,7 +333,6 @@ namespace KclLibrary
 
                         if (inCube)
                         {
-                            Console.WriteLine($"inCube {blockIdx}");
                             if (children[blockIdx].Children != null)
                                 return SearchModelBlock(children[blockIdx].Children, point, cubePosition, boxSize / 2f);
                             else
@@ -459,7 +460,7 @@ namespace KclLibrary
                             Console.WriteLine($"Dividing model at {containedTriangles.Count} polygons.");
 
                         //If the children have too many Prisms, divide into 8 more regions as children.
-                        if (containedTriangles.Count >= MaxModelPrismCount)
+                        if (containedTriangles.Count >= MaxModelPrismCount && level < 2)
                             model.Children = CreateModelDivision(cubePosition, containedTriangles, boxSize / 2f, level + 1);
                         else //Set the triangle list for this region. If it is empty, it will be skipped later
                             model.Triangles = containedTriangles;

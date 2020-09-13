@@ -8,6 +8,7 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using KclLibrary;
+using KclLibrary.AttributeHandlers;
 
 namespace KclLibraryGUI
 {
@@ -16,7 +17,9 @@ namespace KclLibraryGUI
         bool isLoaded = false;
 
         public Dictionary<string, ushort> Result;
-        public ByamlExt.Byaml.BymlFileData AttributeByml;
+        public MaterialAttributeFileBase MaterialAttributeFile;
+
+        public bool UsePerTriangleMatIndices = false;
 
         public string[] Materials;
         public string[] Meshes;
@@ -24,15 +27,15 @@ namespace KclLibraryGUI
         public List<CollisionEntry> MatCollisionList = new List<CollisionEntry>();
         public List<CollisionEntry> MeshCollisionList = new List<CollisionEntry>();
 
+        public MaterialCollisionPicker MaterialCollisionPicker;
+
         public bool UseObjectMaterials => radioBtnMats.Checked;
 
         public static CollisionPresetData ActiveGamePreset = null;
         public static string ActiveGamePlatform = null;
 
         private MaterialGridView DataGridView;
-        private OdysseyCollisionPicker OdysseyCollisionPicker;
-        private SM3DWCollisionPicker SM3DWCollisionPicker;
-        private MaterialCollisionPicker MaterialCollisionPicker;
+        private IMaterialPresetBase PresetCollisionPicker;
 
         public string[] Platforms = new string[]
         {
@@ -128,25 +131,38 @@ namespace KclLibraryGUI
             {
                 DataGridView = null;
                 MaterialCollisionPicker = null;
-                SM3DWCollisionPicker = null;
-                OdysseyCollisionPicker = new OdysseyCollisionPicker(this);
-                OdysseyCollisionPicker.Dock = DockStyle.Fill;
-                panel1.Controls.Add(OdysseyCollisionPicker);
+                var control = new OdysseyCollisionPicker(this) { Dock = DockStyle.Fill };
+                panel1.Controls.Add(control);
+                PresetCollisionPicker = control;
             }
             else if (ActiveGamePreset != null && chkPresetTypeEditor.Checked && ActiveGamePreset.GameTitle == "Mario 3D World")
             {
                 DataGridView = null;
                 MaterialCollisionPicker = null;
-                OdysseyCollisionPicker = null;
-                SM3DWCollisionPicker = new SM3DWCollisionPicker(this);
-                SM3DWCollisionPicker.Dock = DockStyle.Fill;
-                panel1.Controls.Add(SM3DWCollisionPicker);
+                var control = new SM3DWCollisionPicker(this) { Dock = DockStyle.Fill };
+                panel1.Controls.Add(control);
+                PresetCollisionPicker = control;
+            }
+            else if (ActiveGamePreset != null && chkPresetTypeEditor.Checked && ActiveGamePreset.GameTitle == "Mario Galaxy")
+            {
+                DataGridView = null;
+                MaterialCollisionPicker = null;
+                var control = new SMGCollisionPicker(this) { Dock = DockStyle.Fill };
+                panel1.Controls.Add(control);
+                PresetCollisionPicker = control;
+            }
+            else if (ActiveGamePreset != null && chkPresetTypeEditor.Checked && ActiveGamePreset.GameTitle == "Mario 3D Land")
+            {
+                DataGridView = null;
+                MaterialCollisionPicker = null;
+                var control = new SM3DLCollisionPicker(this) { Dock = DockStyle.Fill };
+                panel1.Controls.Add(control);
+                PresetCollisionPicker = control;
             }
             else if (ActiveGamePreset != null && ActiveGamePreset.MaterialPresets?.Count > 0 && chkPresetTypeEditor.Checked)
             {
                 DataGridView = null;
-                OdysseyCollisionPicker = null;
-                SM3DWCollisionPicker = null;
+                PresetCollisionPicker = null;
                 MaterialCollisionPicker = new MaterialCollisionPicker(this);
                 MaterialCollisionPicker.Dock = DockStyle.Fill;
                 panel1.Controls.Add(MaterialCollisionPicker);
@@ -154,8 +170,7 @@ namespace KclLibraryGUI
             else
             {
                 MaterialCollisionPicker = null;
-                OdysseyCollisionPicker = null;
-                SM3DWCollisionPicker = null;
+                PresetCollisionPicker = null;
                 DataGridView = new MaterialGridView(this);
                 DataGridView.Dock = DockStyle.Fill;
                 panel1.Controls.Add(DataGridView);
@@ -170,10 +185,8 @@ namespace KclLibraryGUI
                 DataGridView.ReloadDataList(colList);
             else if (MaterialCollisionPicker != null)
                 MaterialCollisionPicker.ReloadDataList(colList);
-            else if (OdysseyCollisionPicker != null)
-                OdysseyCollisionPicker.ReloadDataList();
-            else if (SM3DWCollisionPicker != null)
-                SM3DWCollisionPicker.ReloadDataList();
+            else if (PresetCollisionPicker != null)
+                PresetCollisionPicker.ReloadDataList();
         }
 
         public static MaterialSetForm ShowForm(string[] materials, string[] meshes)
@@ -189,16 +202,13 @@ namespace KclLibraryGUI
                 Result = DataGridView.Result;
             else if (MaterialCollisionPicker != null)
                 Result = MaterialCollisionPicker.Result;
-            else if (SM3DWCollisionPicker != null)
-            {
-                Result = SM3DWCollisionPicker.Result;
-                AttributeByml = SM3DWCollisionPicker.GenerateByaml();
-            }
-            else if (OdysseyCollisionPicker != null)
-            {
-                Result = OdysseyCollisionPicker.Result;
-                AttributeByml = OdysseyCollisionPicker.GenerateByaml();
-            }
+            else if (PresetCollisionPicker != null)
+                Result = PresetCollisionPicker.Result;
+        }
+
+        public void UpdateMaterialAttributes(List<Triangle> triangles) {
+            if (PresetCollisionPicker != null)
+                MaterialAttributeFile = PresetCollisionPicker.GetAttributeFile(triangles);
         }
 
         private void applyToolStripMenuItem_Click(object sender, EventArgs e)

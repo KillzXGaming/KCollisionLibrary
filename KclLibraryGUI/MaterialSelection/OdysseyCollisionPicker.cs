@@ -8,16 +8,24 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using ByamlExt.Byaml;
+using KclLibrary;
 
 namespace KclLibraryGUI
 {
-    public partial class OdysseyCollisionPicker : UserControl
+    public partial class OdysseyCollisionPicker : UserControl, IMaterialPresetBase
     {
         bool ItemLoaded = false;
 
         public Dictionary<string, ushort> Result
         {
             get { return GenerateIDs(); }
+        }
+
+        public MaterialAttributeFileBase GetAttributeFile(List<Triangle> triangles)
+        {
+            var matAttributeFile = new MaterialAttributeBymlFile();
+            matAttributeFile.BymlFile = GenerateByaml();
+            return matAttributeFile;
         }
 
         private MaterialSetForm ParentEditor;

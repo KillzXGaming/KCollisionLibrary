@@ -66,6 +66,9 @@
     <Compile Include="LoadingWindow.Designer.cs">
       <DependentUpon>LoadingWindow.cs</DependentUpon>
     </Compile>
+    <Compile Include="MaterialAttributeFiles\MaterialAttributeBcsvFile.cs" />
+    <Compile Include="MaterialAttributeFiles\MaterialAttributeBymlFile.cs" />
+    <Compile Include="MaterialAttributeFiles\MaterialAttributeFileBase.cs" />
     <Compile Include="MaterialSelection\MaterialCollisionPicker.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -78,6 +81,7 @@
     <Compile Include="MaterialSelection\MaterialGridView.Designer.cs">
       <DependentUpon>MaterialGridView.cs</DependentUpon>
     </Compile>
+    <Compile Include="MaterialSelection\MaterialPresetBase.cs" />
     <Compile Include="MaterialSelection\MaterialSetForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -89,6 +93,18 @@
     </Compile>
     <Compile Include="MaterialSelection\OdysseyCollisionPicker.Designer.cs">
       <DependentUpon>OdysseyCollisionPicker.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MaterialSelection\SM3DLCollisionPicker.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="MaterialSelection\SM3DLCollisionPicker.Designer.cs">
+      <DependentUpon>SM3DLCollisionPicker.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MaterialSelection\SMGCollisionPicker.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="MaterialSelection\SMGCollisionPicker.Designer.cs">
+      <DependentUpon>SMGCollisionPicker.cs</DependentUpon>
     </Compile>
     <Compile Include="MaterialSelection\SM3DWCollisionPicker.cs">
       <SubType>UserControl</SubType>
@@ -105,6 +121,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="MaterialSelection\MaterialSetForm.resx">
       <DependentUpon>MaterialSetForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MaterialSelection\SM3DLCollisionPicker.resx">
+      <DependentUpon>SM3DLCollisionPicker.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MaterialSelection\SMGCollisionPicker.resx">
+      <DependentUpon>SMGCollisionPicker.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>

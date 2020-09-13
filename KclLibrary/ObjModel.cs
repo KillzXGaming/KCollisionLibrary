@@ -86,9 +86,6 @@ namespace KclLibrary
                 }
             }
 
-            foreach (var att in attributes)
-                DebugLogger.WriteLine($"CollisionAttribute {att}");
-
             return triangles;
         }
 

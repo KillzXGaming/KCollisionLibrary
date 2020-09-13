@@ -5,6 +5,7 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Numerics;
 using ByamlExt.Byaml;
+using KclLibrary.AttributeHandlers;
 
 namespace KclLibraryGUI
 {
@@ -12,7 +13,7 @@ namespace KclLibraryGUI
     {
         public class KclResult
         {
-            public BymlFileData AttributeByml = null;
+            public MaterialAttributeFileBase AttributeFile = null;
             public KCLFile KclFie = null;
         }
 
@@ -64,7 +65,6 @@ namespace KclLibraryGUI
             KclResult kcl = new KclResult();
             await Task.Run(() =>
             {
-                kcl.AttributeByml = form.AttributeByml;
                 var matDictionary = form.Result;
                 var endianness = form.GetEndianness;
                 var version = form.GetVersion;
@@ -96,6 +96,11 @@ namespace KclLibraryGUI
                 }
 
                 var triangles = objectFile.ToTriangles();
+                //Important that we update attribute data after triangles are setup
+                //Some attribute files require the triangles for configuring.
+                form.UpdateMaterialAttributes(triangles);
+                kcl.AttributeFile = form.MaterialAttributeFile;
+
                 if (version != FileVersion.Version2 && triangles.Count > ushort.MaxValue / 4) {
                     MessageBox.Show($"Version 1 KCL (Wii, GC, DS, 3DS) must be below {ushort.MaxValue / 4} polys! Poly Count: {triangles.Count}");
                 }
@@ -107,7 +112,8 @@ namespace KclLibraryGUI
             return kcl;
         }
 
-        public static void SaveKCL(KCLFile kcl, string fileName, BymlFileData AttributeByml)
+        public static void SaveKCL(KCLFile kcl, string fileName, 
+            MaterialAttributeFileBase AttributeFile)
         {
             SaveFileDialog sfd = new SaveFileDialog();
             sfd.Filter = "Supported Formats|*.kcl;";
@@ -115,11 +121,8 @@ namespace KclLibraryGUI
             if (sfd.ShowDialog() == DialogResult.OK)
             {
                 kcl.Save(sfd.FileName);
-
-                if (AttributeByml != null)
-                {
-                    File.WriteAllBytes($"{sfd.FileName.Replace(".kcl", "")}Attribute.byml", ByamlFile.SaveN(AttributeByml));
-                }
+                if (AttributeFile != null)
+                    AttributeFile.Save(AttributeFile.SetupFileName(sfd.FileName));
             }
         }
     }

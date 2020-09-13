@@ -57,12 +57,12 @@ namespace KclLibrary.AttributeHandlers
             return hashes;
         }
 
-        private static uint Calculate(string str)
+        public static uint Calculate(string str)
         {
             return Calculate(Encoding.ASCII.GetBytes(str));
         }
 
-        private static uint CalculateV2(string str)
+        public static uint CalculateV2(string str)
         {
             return CalculateV2(Encoding.ASCII.GetBytes(str));
         }

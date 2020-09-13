@@ -7,12 +7,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using ByamlExt.Byaml;
+using KclLibrary.AttributeHandlers;
 using KclLibrary;
 
 namespace KclLibraryGUI
 {
-    public partial class SM3DWCollisionPicker : UserControl, IMaterialPresetBase
+    public partial class SMGCollisionPicker : UserControl, IMaterialPresetBase
     {
         bool ItemLoaded = false;
 
@@ -23,8 +23,8 @@ namespace KclLibraryGUI
 
         public MaterialAttributeFileBase GetAttributeFile(List<Triangle> triangles)
         {
-            var matAttributeFile = new MaterialAttributeBymlFile();
-            matAttributeFile.BymlFile = GenerateByaml();
+            var matAttributeFile = new MaterialAttributeBcsvFile();
+            matAttributeFile.BcsvFile = GenerateBCSV(triangles);
             return matAttributeFile;
         }
 
@@ -35,38 +35,37 @@ namespace KclLibraryGUI
 
         public bool UseObjectMaterials => ParentEditor.UseObjectMaterials;
 
-        public SM3DWCollisionPicker(MaterialSetForm parentForm)
+        public SMGCollisionPicker(MaterialSetForm parentForm)
         {
             InitializeComponent();
 
             ParentEditor = parentForm;
 
-            foreach (string val in CameraCodes.Keys)
-                cameraCodeCB.Items.Add(val);
-
-            foreach (string val in FloorCodes.Keys)
+            foreach (string val in FloorCodes)
                 floorCodeCB.Items.Add(val);
 
-            foreach (string val in WallCodes.Keys)
+            foreach (string val in WallCodes)
                 wallCodeCB.Items.Add(val);
 
-            foreach (string val in MaterialCodes.Keys)
-                materialCodeCB.Items.Add(val);
+            foreach (string val in SoundCodes)
+                soundCodeCB.Items.Add(val);
 
-            cameraCodeCB.SelectedItem = "NoThrough";
-            floorCodeCB.SelectedItem = "Ground";
-            wallCodeCB.SelectedItem = "Wall";
-            materialCodeCB.SelectedItem = "NoCode";
+            cameraIndexUD.Value = -1;
+            chkCameraThrough.Checked = false;
+            floorCodeCB.SelectedItem = FloorCodes[0];
+            wallCodeCB.SelectedItem = WallCodes[0];
+            soundCodeCB.SelectedItem = SoundCodes[0];
         }
 
         public void ReloadDataList()
         {
             listView1.Items.Clear();
 
-            cameraCodeCB.SelectedItem = "NoThrough";
-            floorCodeCB.SelectedItem = "Ground";
-            wallCodeCB.SelectedItem = "Wall";
-            materialCodeCB.SelectedItem = "NoCode";
+            cameraIndexUD.Value = -1;
+            chkCameraThrough.Checked = false;
+            floorCodeCB.SelectedItem = FloorCodes[0];
+            wallCodeCB.SelectedItem = WallCodes[0];
+            soundCodeCB.SelectedItem = SoundCodes[0];
 
             if (UseObjectMaterials)
             {
@@ -94,20 +93,22 @@ namespace KclLibraryGUI
 
             item.Tag = entry;
             item.Text = entry.Name;
-            item.SubItems.Add(entry.CameraCode);
+            item.SubItems.Add(entry.CameraIndex.ToString());
+            item.SubItems.Add(entry.CameraThrough.ToString());
             item.SubItems.Add(entry.FloorCode);
-            item.SubItems.Add(entry.MaterialCode);
             item.SubItems.Add(entry.WallCode);
+            item.SubItems.Add(entry.SoundCode);
         }
 
         public class CollisionEntry
         {
             public string Name; //Mesh or material name
 
-            public string CameraCode = "NoThrough";
-            public string FloorCode = "Ground";
-            public string MaterialCode = "NONE";
-            public string WallCode = "Wall";
+            public bool CameraThrough = false;
+            public int CameraIndex = -1;
+            public string FloorCode = "Normal";
+            public string SoundCode = "null";
+            public string WallCode = "Normal";
 
             public CollisionEntry(string name)
             {
@@ -121,9 +122,10 @@ namespace KclLibraryGUI
             for (int i = 0; i < entries.Count; i++)
             {
                 if (!col.Any(x =>
-                x.CameraCode == entries[i].CameraCode &&
+                x.CameraIndex == entries[i].CameraIndex &&
+                x.CameraThrough == entries[i].CameraThrough &&
                 x.FloorCode == entries[i].FloorCode &&
-                x.MaterialCode == entries[i].MaterialCode &&
+                x.SoundCode == entries[i].SoundCode &&
                 x.WallCode == entries[i].WallCode))
                 {
                     col.Add(entries[i]);
@@ -149,8 +151,9 @@ namespace KclLibraryGUI
             {
                 int index = col.FindIndex(x =>
                 x.FloorCode == entries[i].FloorCode &&
-                x.CameraCode == entries[i].CameraCode &&
-                x.MaterialCode == entries[i].MaterialCode &&
+                x.CameraThrough == entries[i].CameraThrough &&
+                x.CameraIndex == entries[i].CameraIndex &&
+                x.SoundCode == entries[i].SoundCode &&
                 x.WallCode == entries[i].WallCode
                 );
 
@@ -160,39 +163,42 @@ namespace KclLibraryGUI
             return ids;
         }
 
-        public BymlFileData GenerateByaml()
+        public BCSV GenerateBCSV(List<Triangle> triangles)
         {
             var entries = GetCollisionEntries();
             var col = RemoveDuplicateEntries(entries);
 
-            List<dynamic> root = new List<dynamic>();
+            KclLibrary.DebugLogger.WriteLine("Generating BCSV...");
 
-            foreach (var entry in col)
+            var bcsv = new BCSV();
+            bcsv.IsBigEndian = true;
+            bcsv.Fields.Add(new BCSV.Field("camera_id", BCSV.FieldType.Int32, 0, 0x000000FF, 0));
+            bcsv.Fields.Add(new BCSV.Field("Sound_code", BCSV.FieldType.Int32, 0, 0x00007F00, 8));
+            bcsv.Fields.Add(new BCSV.Field("Floor_code", BCSV.FieldType.Int32, 0, 0x01F8000, 15));
+            bcsv.Fields.Add(new BCSV.Field("Wall_code", BCSV.FieldType.Int32, 0, 0x01E00000, 21));
+            bcsv.Fields.Add(new BCSV.Field("Camera_through", BCSV.FieldType.Int32, 0, 0x02000000, 25));
+
+            foreach (var tri in triangles)
             {
-                IDictionary<string, dynamic> colCodes = new Dictionary<string, dynamic>();
-
-                colCodes.Add("CameraCode", CreateEntry(CameraCodes, entry.CameraCode));
-                colCodes.Add("FloorCode", CreateEntry(FloorCodes, entry.FloorCode));
-                colCodes.Add("MaterialCode", CreateEntry(MaterialCodes, entry.MaterialCode));
-                colCodes.Add("WallCode", CreateEntry(WallCodes, entry.WallCode));
-                root.Add(colCodes);
+                var entry = col[tri.Attribute];
+                var record = new BCSV.Record(new object[5]
+                {
+                    (uint)(entry.CameraIndex == -1 ? 255 : entry.CameraIndex),
+                    (uint)CreateEntry(SoundCodes, entry.SoundCode),
+                    (uint)CreateEntry(FloorCodes, entry.FloorCode),
+                    (uint)CreateEntry(WallCodes, entry.WallCode),
+                    (uint)(entry.CameraThrough ? 1 : 0),
+                });
+                tri.Attribute = (ushort)bcsv.Records.Count;
+                bcsv.Records.Add(record);
             }
 
-            var byml = new BymlFileData();
-            byml.byteOrder = Syroot.BinaryData.ByteOrder.BigEndian;
-            byml.Version = 1;
-            byml.SupportPaths = false;
-            byml.RootNode = root;
-
-            return byml;
+            return bcsv;
         }
 
-        private List<dynamic> CreateEntry(Dictionary<string, int> dictionary, string key)
+        private int CreateEntry(string[] input, string key)
         {
-            List<dynamic> list = new List<dynamic>();
-            list.Add(key);
-            list.Add(dictionary[key]);
-            return list;
+            return Array.IndexOf(input, key);
         }
 
         private void listView1_SelectedIndexChanged(object sender, EventArgs e)
@@ -202,9 +208,10 @@ namespace KclLibraryGUI
                 ItemLoaded = false;
 
                 CollisionEntry tag = (CollisionEntry)listView1.SelectedItems[0].Tag;
-                cameraCodeCB.SelectedItem = tag.CameraCode;
+                cameraIndexUD.Value = tag.CameraIndex;
+                chkCameraThrough.Checked = tag.CameraThrough;
                 floorCodeCB.SelectedItem = tag.FloorCode;
-                materialCodeCB.SelectedItem = tag.MaterialCode;
+                soundCodeCB.SelectedItem = tag.SoundCode;
                 wallCodeCB.SelectedItem = tag.WallCode;
 
                 ItemLoaded = true;
@@ -219,9 +226,10 @@ namespace KclLibraryGUI
                 {
                     CollisionEntry tag = (CollisionEntry)item.Tag;
 
-                    tag.CameraCode = cameraCodeCB.SelectedItem.ToString();
+                    tag.CameraThrough = chkCameraThrough.Checked;
+                    tag.CameraIndex = (int)cameraIndexUD.Value;
                     tag.FloorCode = floorCodeCB.SelectedItem.ToString();
-                    tag.MaterialCode = materialCodeCB.SelectedItem.ToString();
+                    tag.SoundCode = soundCodeCB.SelectedItem.ToString();
                     tag.WallCode = wallCodeCB.SelectedItem.ToString();
 
                     UpdateListItem(item, tag);
@@ -231,68 +239,32 @@ namespace KclLibraryGUI
             }
         }
 
-        public Dictionary<string, int> CameraCodes = new Dictionary<string, int>()
+        //Codes ported from http://kuribo64.net/board/thread.php?pid=143#143
+        public string[] SoundCodes = new string[]
         {
-            { "NoThrough", 7 },
-            { "Through", 8 },
+            "null","Soil","Lawn","Stone","Marble","Wood Thick","Wood Thin",
+            "Metal","Snow","Ice","Shallow","Beach","unknown","Carpet","Mud",
+            "Honey","Metal Heavy","Marble Snow","Marble Soil","Metal Soil","Cloud",
+            "Marble Beach","Marble Sand",
         };
 
-        public Dictionary<string, int> FloorCodes = new Dictionary<string, int>()
+        public string[] FloorCodes = new string[]
         {
-            { "ClimbSlope", 7 },
-            { "DamageFire", 2 },
-            { "Ground", 0 },
-            { "IgnoreTouch", 8 },
-            { "Needle", 1 },
-            { "Poison", 3 },
-            { "Skate", 6 },
-            { "Slide", 4 },
+            "Normal","Death","Slip","No Slip","Damage Normal","Ice",
+            "Jump Low","Jump Middle","Jump High","Slider","Damage Fire",
+            "Jump Normal","Fire Dance","Sand","Glass","Damage Electric",
+            "Pull Back","Sink","Sink Poison","Slide","Water Bottom H",
+            "Water Bottom M","Water Bottom L","Shallow","Needle","Sink Death",
+            "Snow","Rail Move","Area Move","Press","No Stamp Sand",
+            "Sink Death Mud","Brake","Glass Ice","Jump Parasol","unknown","No Dig",
+            "Lawn","Cloud","Press And No Slip","Force Dash","Dark Matter","Dust",
+            "Snow And No Slip",
         };
 
-        public Dictionary<string, int> MaterialCodes = new Dictionary<string, int>()
+        public string[] WallCodes = new string[]
         {
-            { "NONE", 0 },
-            { "Ashore", 36 },
-            { "Carpet", 24 },
-            { "ChocoCream", 39 },
-            { "Cloth", 34 },
-            { "Cloud", 25 },
-            { "Cream", 38 },
-            { "EchoBlock", 49 },
-            { "FallenLeaves", 31 },
-            { "Glass", 33 },
-            { "Ice", 30 },
-            { "InSand", 21 },
-            { "InWater", 20 },
-            { "Kawara", 44 },
-            { "LavaBlue", 43 },
-            { "LavaRed", 42 },
-            { "Lawn", 11 },
-            { "LawnPink", 46 },
-            { "Marble", 23 },
-            { "Metal", 12 },
-            { "MetalHeavy", 15 },
-            { "NoCode", 99 },
-            { "Puddle", 40 },
-            { "Sand", 14 },
-            { "Snow", 18 },
-            { "Soil", 10 },
-            { "SpacePuddle", 51 },
-            { "SqueakWood", 45 },
-            { "Stone", 13 },
-            { "StoneWet", 32 },
-            { "Tatami", 48 },
-            { "TouchPoint", 41 },
-            { "W5Puddle", 50 },
-            { "WoodThick", 16 },
-            { "WoodThin", 17 },
-            { "WoodWet", 35 },
-        };
-
-        public Dictionary<string, int> WallCodes = new Dictionary<string, int>()
-        {
-            { "NoAction", 6 },
-            { "Wall", 5 },
+            "Normal","Not Wall Jump","Not Wall Slip","Not Grap",
+            "Ghost Through","Not Side Step","Rebound","Honey","No Action"
         };
     }
 }
