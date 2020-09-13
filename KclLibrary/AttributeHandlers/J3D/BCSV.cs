@@ -40,6 +40,17 @@ namespace KclLibrary.AttributeHandlers
         }
 
         /// <summary>
+        /// Saves a BCSV to the given file path.
+        /// </summary>
+        /// <param name="filePath"></param>
+        public void Save(string filePath)
+        {
+            using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write)) {
+                Save(fileStream);
+            }
+        }
+
+        /// <summary>
         /// Saves a BCSV to the given stream.
         /// </summary>
         /// <param name="stream"></param>
@@ -154,6 +165,26 @@ namespace KclLibrary.AttributeHandlers
             /// </summary>
             public FieldType Type { get; set; }
 
+            public Field(string name, FieldType type, ushort offset, uint mask, sbyte shift = 0)
+            {
+                Name = name;
+                Hash = BCSVHashHelper.CalculateV2(name);
+                Type = type;
+                Offset = offset;
+                Bitmask = mask;
+                Shift = shift;
+            }
+
+            public Field(uint hash, FieldType type, ushort offset, uint mask, sbyte shift = 0)
+            {
+                Name = BCSVHashHelper.GetHashName(hash);
+                Hash = hash;
+                Type = type;
+                Offset = offset;
+                Bitmask = mask;
+                Shift = shift;
+            }
+
             internal Field(BinaryDataReader reader)
             {
                 Hash = reader.ReadUInt32();
@@ -162,6 +193,8 @@ namespace KclLibrary.AttributeHandlers
                 Shift = reader.ReadSByte();
                 Type = (FieldType)reader.ReadByte();
                 Name = BCSVHashHelper.GetHashName(Hash);
+
+                Console.WriteLine($"FIELD {Name} Bitmask {Bitmask} Shift {Shift}");
             }
 
             internal void Write(BinaryDataWriter writer)
@@ -203,6 +236,10 @@ namespace KclLibrary.AttributeHandlers
 
             internal object[] BaseValues { get; set; }
 
+            public Record(object[] values) {
+                Values = values;
+            }
+
             internal Record(BinaryDataReader reader, List<Field> fields)
             {
                 long pos = reader.Position;
@@ -215,7 +252,7 @@ namespace KclLibrary.AttributeHandlers
                     switch (fields[i].Type)
                     {
                         case FieldType.Int32:
-                            Values[i] = (uint)((reader.ReadInt32() >> fields[i].Shift) & fields[i].Bitmask);
+                            Values[i] = (uint)((reader.ReadInt32() & fields[i].Bitmask) >> fields[i].Shift);
                             break;
                         case FieldType.Float:
                             Values[i] = reader.ReadSingle();
@@ -239,6 +276,8 @@ namespace KclLibrary.AttributeHandlers
 
            internal void Write(BinaryDataWriter writer, List<Field> fields)
             {
+                Dictionary<ushort, uint> buffer = new Dictionary<ushort, uint>(fields.Count);
+
                 long pos = writer.Position;
                 for (int i = 0; i < fields.Count; i++)
                 {
@@ -246,7 +285,19 @@ namespace KclLibrary.AttributeHandlers
                     switch (fields[i].Type)
                     {
                         case FieldType.Int32:
-                            writer.Write(((uint)Values[i]) << fields[i].Shift | fields[i].Bitmask);
+                            uint value = (uint)Values[i];
+                            Console.WriteLine($"SAVED Fields {fields[i].Name} {Values[i]}");
+                            if (fields[i].Bitmask == uint.MaxValue)
+                            {
+                                writer.Write(value);
+                            }
+                            else
+                            {
+                                if (!buffer.ContainsKey(fields[i].Offset))
+                                    buffer[fields[i].Offset] = 0u;
+
+                                buffer[fields[i].Offset] |= ((uint)(value << fields[i].Shift) & fields[i].Bitmask);
+                            }
                             break;
                         case FieldType.Float:
                             writer.Write((float)Values[i]);
@@ -263,6 +314,12 @@ namespace KclLibrary.AttributeHandlers
                         case FieldType.StringJIS:
                             writer.Write((string)Values[i], BinaryStringFormat.ZeroTerminated, Encoding.GetEncoding("shift_jis"));
                             break;
+                    }
+
+                    foreach (var val in buffer)
+                    {
+                        writer.Seek(pos + val.Key, SeekOrigin.Begin);
+                        writer.Write(val.Value);
                     }
                 }
             }

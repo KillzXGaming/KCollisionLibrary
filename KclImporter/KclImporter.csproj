@@ -81,6 +81,12 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <None Include="CollisionPresets\Mario 3D Land.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="CollisionPresets\Mario Galaxy.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="CollisionPresets\3D World.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
