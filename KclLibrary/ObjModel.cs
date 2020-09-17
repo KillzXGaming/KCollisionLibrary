@@ -179,6 +179,15 @@ namespace KclLibrary
                             {
                                 string[] vertexArgs = args[i + 1].Split(_vertexSeparators, StringSplitOptions.None);
                                 face.Vertices[i].Position = Positions[Int32.Parse(vertexArgs[0]) - 1];
+
+                                if (float.IsNaN(face.Vertices[i].Position.X) || 
+                                    float.IsNaN(face.Vertices[i].Position.Y) ||
+                                    float.IsNaN(face.Vertices[i].Position.Z))
+                                {
+                                    face.Vertices = null;
+                                    break;
+                                }
+
                                 if (vertexArgs.Length > 1 && vertexArgs[1] != String.Empty)
                                 {
                                     face.Vertices[i].TexCoord = TexCoords[Int32.Parse(vertexArgs[1]) - 1];
@@ -189,7 +198,8 @@ namespace KclLibrary
                                 }
                             }
 
-                            currentMesh.Faces.Add(face);
+                            if (face.Vertices != null)
+                                currentMesh.Faces.Add(face);
                             continue;
                         case "usemtl":
                             {
