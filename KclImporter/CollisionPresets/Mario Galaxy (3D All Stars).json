@@ -1,0 +1,9 @@
+{
+  "GameTitle": "Mario Galaxy (3D All Stars)",
+  "Platform": "WIILE",
+  "PrismThickness": 40.0,
+  "SphereRadius": 0.0,
+  "Comments": "This game uses bcsv to customize presets.",
+  "MaterialPresets": {
+  }
+}

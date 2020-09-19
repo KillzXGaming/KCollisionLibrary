@@ -39,7 +39,7 @@ namespace KclLibraryGUI
 
         public string[] Platforms = new string[]
         {
-            "GCN","NDS","N3DS","WII","WII U","SWITCH"
+            "GCN","NDS","N3DS","WII", "WII LE", "WII U","SWITCH",
         };
 
         public MaterialSetForm(string[] mats, string[] meshes)
@@ -99,6 +99,7 @@ namespace KclLibraryGUI
                     case "NDS": return false;
                     case "N3DS": return false;
                     case "SWITCH": return false;
+                    case "WII LE": return false;
                     case "GCN": return true;
                     case "WII": return true;
                     case "WII U": return true;
@@ -117,6 +118,7 @@ namespace KclLibraryGUI
                     case "NDS": return FileVersion.VersionDS;
                     case "GCN": return FileVersion.VersionGC;
                     case "WII": return FileVersion.VersionWII;
+                    case "WII LE": return FileVersion.VersionWII;
                     case "N3DS": return FileVersion.VersionWII;
                     default:
                         return FileVersion.Version2;
@@ -143,7 +145,7 @@ namespace KclLibraryGUI
                 panel1.Controls.Add(control);
                 PresetCollisionPicker = control;
             }
-            else if (ActiveGamePreset != null && chkPresetTypeEditor.Checked && ActiveGamePreset.GameTitle == "Mario Galaxy")
+            else if (ActiveGamePreset != null && chkPresetTypeEditor.Checked && ActiveGamePreset.GameTitle.Contains("Mario Galaxy"))
             {
                 DataGridView = null;
                 MaterialCollisionPicker = null;
