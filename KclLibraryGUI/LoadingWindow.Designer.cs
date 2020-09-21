@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
-            this.consoleLogger = new System.Windows.Forms.TextBox();
+            this.consoleLogger = new System.Windows.Forms.RichTextBox();
             this.SuspendLayout();
             // 
             // progressBar1
@@ -69,6 +69,6 @@
 
         #endregion
         private System.Windows.Forms.ProgressBar progressBar1;
-        private System.Windows.Forms.TextBox consoleLogger;
+        private System.Windows.Forms.RichTextBox consoleLogger;
     }
 }

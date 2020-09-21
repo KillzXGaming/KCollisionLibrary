@@ -208,9 +208,9 @@ namespace KclLibraryGUI
                 Result = PresetCollisionPicker.Result;
         }
 
-        public void UpdateMaterialAttributes(List<Triangle> triangles) {
+        public void UpdateMaterialAttributes(List<Triangle> triangles, bool isBigEndian) {
             if (PresetCollisionPicker != null)
-                MaterialAttributeFile = PresetCollisionPicker.GetAttributeFile(triangles);
+                MaterialAttributeFile = PresetCollisionPicker.GetAttributeFile(triangles, isBigEndian);
         }
 
         private void applyToolStripMenuItem_Click(object sender, EventArgs e)

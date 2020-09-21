@@ -4,7 +4,7 @@ using KclLibraryGUI;
 using KclLibrary;
 using System.IO;
 using System.Threading;
-using System.Numerics;
+using System.Drawing;
 using ByamlExt.Byaml;
 
 namespace KclLibraryGUI
@@ -25,7 +25,14 @@ namespace KclLibraryGUI
             {
                 this.Invoke((MethodInvoker)delegate
                 {
-                    consoleLogger.AppendText((string)sender + "\r\n");
+                    if (DebugLogger.IsCurrentError)
+                    {
+                        consoleLogger.SelectionColor = Color.Red;
+                        consoleLogger.AppendText((string)sender + "\r\n");
+                        consoleLogger.SelectionColor = consoleLogger.ForeColor;
+                    }
+                    else
+                        consoleLogger.AppendText((string)sender + "\r\n");
                     this.Refresh();
                 });
             }

@@ -308,8 +308,8 @@ namespace KclLibrary
             if (block != null && block.ModelIndex != null)
             {
                 var hit = Models[(int)block.ModelIndex].CheckHit(point);
-                if (hit != null) //Convert local space back to world with the current transformation
-                    hit.CenterY = Vector3.Transform(new Vector3(0, hit.CenterY, 0), Transform).Y;
+              //  if (hit != null) //Convert local space back to world with the current transformation
+                    //      hit.CenterY = Vector3.Transform(new Vector3(0, hit.CenterY, 0), Transform).Y;
                 return hit;
             }
 

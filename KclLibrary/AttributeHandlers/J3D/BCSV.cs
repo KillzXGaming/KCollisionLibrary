@@ -63,7 +63,7 @@ namespace KclLibrary.AttributeHandlers
             using (reader.TemporarySeek(8, SeekOrigin.Begin))
             {
                 if (reader.ReadUInt32() != 76) {
-                    IsBigEndian = true;
+                    IsBigEndian = true; 
                     reader.ByteOrder = ByteOrder.BigEndian;
                 }
             }

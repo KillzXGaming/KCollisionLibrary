@@ -21,7 +21,7 @@ namespace KclLibraryGUI
             get { return GenerateIDs(); }
         }
 
-        public MaterialAttributeFileBase GetAttributeFile(List<Triangle> triangles)
+        public MaterialAttributeFileBase GetAttributeFile(List<Triangle> triangles, bool isBigEndian)
         {
             var matAttributeFile = new MaterialAttributeBymlFile();
             matAttributeFile.BymlFile = GenerateByaml();

@@ -69,6 +69,10 @@ namespace KclLibraryGUI
                 var endianness = form.GetEndianness;
                 var version = form.GetVersion;
                 var preset = MaterialSetForm.ActiveGamePreset;
+                //A small quick hack
+                if (preset.GameTitle.Contains("Mario Galaxy"))
+                    version = FileVersion.VersionGC;
+
                 var settings = new CollisionImportSettings()
                 {
                     SphereRadius = preset.SphereRadius,
@@ -76,9 +80,9 @@ namespace KclLibraryGUI
                     PaddingMax = new Vector3(preset.PaddingMax),
                     PaddingMin = new Vector3(preset.PaddingMin),
                     MaxRootSize = preset.MaxRootSize,
+                    MinRootSize = preset.MinRootSize,
                     MinCubeSize = preset.MinCubeSize,
                     MaxTrianglesInCube = preset.MaxTrianglesInCube,
-                    MinRootSize = preset.MinRootSize,
                 };
 
                 foreach (var mesh in objectFile.Meshes)
@@ -98,7 +102,7 @@ namespace KclLibraryGUI
                 var triangles = objectFile.ToTriangles();
                 //Important that we update attribute data after triangles are setup
                 //Some attribute files require the triangles for configuring.
-                form.UpdateMaterialAttributes(triangles);
+                form.UpdateMaterialAttributes(triangles, endianness);
                 kcl.AttributeFile = form.MaterialAttributeFile;
 
                 if (version != FileVersion.Version2 && triangles.Count > ushort.MaxValue / 4) {
@@ -106,7 +110,7 @@ namespace KclLibraryGUI
                 }
                 else
                 {
-                    kcl.KclFie = new KCLFile(triangles, version, endianness);
+                    kcl.KclFie = new KCLFile(triangles, version, endianness, settings);
                 }
             });
             return kcl;

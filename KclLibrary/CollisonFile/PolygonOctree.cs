@@ -85,10 +85,12 @@ namespace KclLibrary
                 }
             }
 
-            bool isTriangleList = cubeSize <= maxCubeSize && containedTriangles.Count <= maxTrianglesInCube ||
-                cubeSize <= minCubeSize || depth > maxDepth;
+            float halfWidth = cubeSize / 2f;
 
-            if (!isTriangleList)
+            bool isTriangleList = cubeSize <= maxCubeSize && containedTriangles.Count <= maxTrianglesInCube ||
+                                  cubeSize <= minCubeSize || depth > maxDepth;
+
+            if (containedTriangles.Count > maxTrianglesInCube && halfWidth >= minCubeSize)
             {
                 // Too many triangles are in this cube, and it can still be subdivided into smaller cubes.
                 float childCubeSize = cubeSize / 2f;

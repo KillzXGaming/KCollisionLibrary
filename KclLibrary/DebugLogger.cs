@@ -22,6 +22,8 @@ namespace KclLibrary
         /// </summary>
         public static EventHandler OnProgressUpdated;
 
+        public static bool IsCurrentError = false;
+
         public string GetLog() {
             return Value;
         }
@@ -34,6 +36,15 @@ namespace KclLibrary
             Value += $"{value}\n";
             Console.WriteLine($"DebugLogger {value}");
             OnDebuggerUpdated?.Invoke(value, EventArgs.Empty);
+        }
+
+        public static void WriteError(string value)
+        {
+            Value += $"{value}\n";
+            Console.WriteLine($"DebugLogger {value}");
+            IsCurrentError = true;
+            OnDebuggerUpdated?.Invoke(value, EventArgs.Empty);
+            IsCurrentError = false;
         }
 
 

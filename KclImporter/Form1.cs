@@ -41,7 +41,7 @@ namespace KclImporter
                             this.Invoke((MethodInvoker)delegate
                             {
                                 if (result.KclFie != null)
-                                    CollisionLoader.SaveKCL(result.KclFie, file, result.AttributeByml);
+                                    CollisionLoader.SaveKCL(result.KclFie, file, result.AttributeFile);
                             });
                         }
                         catch (Exception ex)

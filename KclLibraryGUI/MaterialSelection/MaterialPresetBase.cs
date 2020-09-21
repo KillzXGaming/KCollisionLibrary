@@ -10,7 +10,7 @@ namespace KclLibraryGUI
     public interface IMaterialPresetBase
     {
         Dictionary<string, ushort> Result { get; }
-        MaterialAttributeFileBase GetAttributeFile(List<Triangle> triangles);
+        MaterialAttributeFileBase GetAttributeFile(List<Triangle> triangles, bool isBigEndian);
         void ReloadDataList();
     }
 }

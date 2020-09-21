@@ -21,10 +21,11 @@ namespace KclLibraryGUI
             get { return GenerateIDs(); }
         }
 
-        public MaterialAttributeFileBase GetAttributeFile(List<Triangle> triangles)
+        public MaterialAttributeFileBase GetAttributeFile(List<Triangle> triangles, bool isBigEndian)
         {
             var matAttributeFile = new MaterialAttributeBcsvFile();
             matAttributeFile.BcsvFile = GenerateBCSV(triangles);
+            matAttributeFile.BcsvFile.IsBigEndian = isBigEndian;
             return matAttributeFile;
         }
 
