@@ -351,6 +351,8 @@ namespace KclLibrary
             {
                 if (octree.ModelIndex.HasValue)
                     DebugLogger.WriteLine($"{indent}index {index} ModelIndex {octree.ModelIndex}");
+                else if (octree.Children == null)
+                    DebugLogger.WriteLine($"{indent}index {index} Empty Space");
 
                 if (octree.Children != null)
                     PrintModelOctree(octree.Children, indent + "-");
@@ -362,21 +364,12 @@ namespace KclLibrary
         private void CreateModelOctree(List<ModelGroup> modelRoots, ModelOctreeNode[] nodes,
             CollisionImportSettings settings,  uint baseTriCount, int level = 0)
         {
+            //Check the triangles first for loading the model octrees
             for (int i = 0; i < modelRoots.Count; i++)
             {
                 int nodeIndex = modelRoots[i].BlockIndex;
-
-                if (modelRoots[i].Children.Count > 0)
-                {
-                    nodes[nodeIndex].Children = new ModelOctreeNode[ModelOctreeNode.ChildCount];
-                    for (int j = 0; j < ModelOctreeNode.ChildCount; j++) {
-                        nodes[nodeIndex].Children[j] = new ModelOctreeNode();
-                    }
-                    //Load addtional subidivison models
-                    CreateModelOctree(modelRoots[i].Children, nodes[nodeIndex].Children, settings, baseTriCount, level + 1);
-
-                }//If the model has triangle data, add it to our global model list
-                else if (modelRoots[i].Triangles.Count > 0)
+                //If the model has triangle data, add it to our global model list
+                if (modelRoots[i].Triangles.Count > 0)
                 {
                     var model = new KCLModel(modelRoots[i].Triangles, baseTriCount, Version, settings);
                     baseTriCount += (uint)modelRoots[i].Triangles.Count;
@@ -386,6 +379,17 @@ namespace KclLibrary
                         nodes[index].ModelIndex = (uint)Models.Count;
 
                     Models.Add(model);
+                }
+
+                if (modelRoots[i].Children.Count > 0)
+                {
+                    nodes[nodeIndex].Children = new ModelOctreeNode[ModelOctreeNode.ChildCount];
+                    for (int j = 0; j < ModelOctreeNode.ChildCount; j++)
+                    {
+                        nodes[nodeIndex].Children[j] = new ModelOctreeNode();
+                    }
+                    //Load addtional subidivison models
+                    CreateModelOctree(modelRoots[i].Children, nodes[nodeIndex].Children, settings, baseTriCount, level + 1);
                 }
             }
         }
@@ -456,6 +460,9 @@ namespace KclLibrary
                                 containedTriangles.Add(triangles[i]);
                         }
 
+                        if (containedTriangles.Count == 0)
+                            Console.WriteLine($"EMPTY SPACE {index} {level}");
+
                         if (containedTriangles.Count >= MaxModelPrismCount)
                             Console.WriteLine($"Dividing model at {containedTriangles.Count} polygons.");
 
@@ -521,8 +528,7 @@ namespace KclLibrary
                 Models.Add(model);
 
                 //Create default model octrees that index the first model
-                for (int i = 0; i < ModelOctreeNode.ChildCount; i++)
-                {
+                for (int i = 0; i < ModelOctreeNode.ChildCount; i++) {
                     ModelOctreeRoot.Children[i] = new ModelOctreeNode() { ModelIndex = 0 };
                 }
 
@@ -543,7 +549,7 @@ namespace KclLibrary
 
                 reader.Position = octreeOffset; // Mostly unrequired, data is successive.
                 for (int i = 0; i < ModelOctreeNode.ChildCount; i++) {
-                    ModelOctreeRoot.Children[i] = new ModelOctreeNode(reader);
+                    ModelOctreeRoot.Children[i] = new ModelOctreeNode(reader, (uint)octreeOffset);
                 }
 
                 // Read the model offsets.
@@ -557,7 +563,8 @@ namespace KclLibrary
                     model.Read(reader, Version);
                     Models.Add(model);
                 }
-
+                Console.WriteLine("READ");
+                PrintModelOctree(ModelOctreeRoot.Children);
             }
         }
 
@@ -621,6 +628,9 @@ namespace KclLibrary
             octreeOffset.Satisfy();
             foreach (ModelOctreeNode rootChild in ModelOctreeRoot) 
                 rootChild.Write(writer);
+
+            foreach (ModelOctreeNode rootChild in ModelOctreeRoot)
+                rootChild.WriteChildren(writer);
 
             // Write the model offsets.
             modelOffsetArrayOffset.Satisfy();

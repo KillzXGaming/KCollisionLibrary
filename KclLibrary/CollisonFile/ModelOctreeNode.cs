@@ -20,19 +20,26 @@ namespace KclLibrary
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CourseOctreeNode"/> class with the key and data read from the
-        /// given <paramref name="reader"/>.
+        /// given <paramref name="reader"/> and the <paramref name="parentPosition"/>.
         /// </summary>
         /// <param name="reader">The <see cref="BinaryDataReader"/> to read the node data with.</param>
-        internal ModelOctreeNode(BinaryDataReader reader) : base(reader.ReadUInt32())
+        internal ModelOctreeNode(BinaryDataReader reader, uint parentPosition) : base(reader.ReadUInt32())
         {
             switch ((Flags)(Key & _flagMask))
             {
                 case Flags.Divide:
+                    // Offset in bytes relative to parent node start.
+                    uint offset = parentPosition + (Key & 0x3FFFFFFF) * sizeof(uint);
+                    long pos = reader.Position;
+
+                    reader.Seek(offset, System.IO.SeekOrigin.Begin);
+
                     // Node is a branch subdivided into 8 children.
                     Children = new ModelOctreeNode[ChildCount];
                     for (int i = 0; i < ChildCount; i++) {
-                        Children[i] = new ModelOctreeNode(reader);
+                        Children[i] = new ModelOctreeNode(reader, offset);
                     }
+                    reader.Seek(pos, System.IO.SeekOrigin.Begin);
                     break;
                 case Flags.Values:
                     // Node points to a model in the file's model array.
@@ -52,8 +59,6 @@ namespace KclLibrary
 
         internal void Write(BinaryDataWriter writer)
         {
-            Console.WriteLine($"Key {Key.ToString("X")}");
-
             if (Children == null)
             {
                 if (ModelIndex.HasValue)
@@ -73,9 +78,17 @@ namespace KclLibrary
                 // Node is a branch subdivided into 8 children.
                 Key = 8;
                 writer.Write(Key);
-                foreach (ModelOctreeNode child in Children) {
+            }
+        }
+
+        internal void WriteChildren(BinaryDataWriter writer)
+        {
+            if (Children != null)
+            {
+                foreach (ModelOctreeNode child in Children) 
                     child.Write(writer);
-                }
+                foreach (ModelOctreeNode child in Children)
+                    child.WriteChildren(writer);
             }
         }
     }
