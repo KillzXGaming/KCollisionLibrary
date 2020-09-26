@@ -141,6 +141,8 @@ namespace KclLibrary
                 while (!reader.EndOfStream)
                 {
                     string line = reader.ReadLine();
+                    line = line.Replace(",", ".");
+
                     // Ignore empty lines and comments.
                     if (String.IsNullOrWhiteSpace(line) || line.StartsWith("#")) continue;
 
