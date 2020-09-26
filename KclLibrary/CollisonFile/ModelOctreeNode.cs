@@ -52,16 +52,18 @@ namespace KclLibrary
 
         internal void Write(BinaryDataWriter writer)
         {
+            Console.WriteLine($"Key {Key.ToString("X")}");
+
             if (Children == null)
             {
                 if (ModelIndex.HasValue)
                 {
-                    // Node points to a model in the file's model array.
+                    //Node points to a model in the file's model array.
                     Key = (uint)Flags.Values | ModelIndex.Value;
                 }
                 else
                 {
-                    // Node is an empty cube.
+                    //Node is an empty cube.
                     Key = (uint)Flags.NoData;
                 }
                 writer.Write(Key);
@@ -71,17 +73,9 @@ namespace KclLibrary
                 // Node is a branch subdivided into 8 children.
                 Key = 8;
                 writer.Write(Key);
-            }
-        }
-
-        internal void WriteChildren(BinaryDataWriter writer)
-        {
-            if (Children != null)
-            {
-                foreach (ModelOctreeNode child in Children) 
+                foreach (ModelOctreeNode child in Children) {
                     child.Write(writer);
-                foreach (ModelOctreeNode child in Children)
-                    child.WriteChildren(writer);
+                }
             }
         }
     }

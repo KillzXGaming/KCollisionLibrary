@@ -460,7 +460,7 @@ namespace KclLibrary
                             Console.WriteLine($"Dividing model at {containedTriangles.Count} polygons.");
 
                         //If the children have too many Prisms, divide into 8 more regions as children.
-                        if (containedTriangles.Count >= MaxModelPrismCount && level < 2)
+                        if (containedTriangles.Count >= MaxModelPrismCount)
                             model.Children = CreateModelDivision(cubePosition, containedTriangles, boxSize / 2f, level + 1);
                         else //Set the triangle list for this region. If it is empty, it will be skipped later
                             model.Triangles = containedTriangles;
@@ -621,8 +621,6 @@ namespace KclLibrary
             octreeOffset.Satisfy();
             foreach (ModelOctreeNode rootChild in ModelOctreeRoot) 
                 rootChild.Write(writer);
-            foreach (ModelOctreeNode rootChild in ModelOctreeRoot)
-                rootChild.WriteChildren(writer);
 
             // Write the model offsets.
             modelOffsetArrayOffset.Satisfy();
