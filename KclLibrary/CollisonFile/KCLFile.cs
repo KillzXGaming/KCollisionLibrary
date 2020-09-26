@@ -364,22 +364,9 @@ namespace KclLibrary
         private void CreateModelOctree(List<ModelGroup> modelRoots, ModelOctreeNode[] nodes,
             CollisionImportSettings settings,  uint baseTriCount, int level = 0)
         {
-            //Check the triangles first for loading the model octrees
             for (int i = 0; i < modelRoots.Count; i++)
             {
                 int nodeIndex = modelRoots[i].BlockIndex;
-                //If the model has triangle data, add it to our global model list
-                if (modelRoots[i].Triangles.Count > 0)
-                {
-                    var model = new KCLModel(modelRoots[i].Triangles, baseTriCount, Version, settings);
-                    baseTriCount += (uint)modelRoots[i].Triangles.Count;
-
-                    nodes[nodeIndex].ModelIndex = (uint)Models.Count;
-                    foreach (var index in modelRoots[i].MergedBlockIndices)
-                        nodes[index].ModelIndex = (uint)Models.Count;
-
-                    Models.Add(model);
-                }
 
                 if (modelRoots[i].Children.Count > 0)
                 {
@@ -390,6 +377,18 @@ namespace KclLibrary
                     }
                     //Load addtional subidivison models
                     CreateModelOctree(modelRoots[i].Children, nodes[nodeIndex].Children, settings, baseTriCount, level + 1);
+
+                }//If the model has triangle data, add it to our global model list
+                else if (modelRoots[i].Triangles.Count > 0)
+                {
+                    var model = new KCLModel(modelRoots[i].Triangles, baseTriCount, Version, settings);
+                    baseTriCount += (uint)modelRoots[i].Triangles.Count;
+
+                    nodes[nodeIndex].ModelIndex = (uint)Models.Count;
+                    foreach (var index in modelRoots[i].MergedBlockIndices)
+                        nodes[index].ModelIndex = (uint)Models.Count;
+
+                    Models.Add(model);
                 }
             }
         }
@@ -563,8 +562,6 @@ namespace KclLibrary
                     model.Read(reader, Version);
                     Models.Add(model);
                 }
-                Console.WriteLine("READ");
-                PrintModelOctree(ModelOctreeRoot.Children);
             }
         }
 
