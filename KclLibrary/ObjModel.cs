@@ -23,7 +23,8 @@ namespace KclLibrary
         /// <summary>
         /// Initializes a new instance of the <see cref="ObjModel"/> class.
         /// </summary>
-        public ObjModel() {
+        public ObjModel()
+        {
             Meshes = new List<ObjMesh>();
             Materials = new List<ObjMaterial>();
         }
@@ -32,7 +33,8 @@ namespace KclLibrary
         /// Initializes a new instance of the <see cref="ObjModel"/> class from the given stream.
         /// </summary>
         /// <param name="stream">The stream from which the instance will be loaded.</param>
-        public ObjModel(Stream stream) {
+        public ObjModel(Stream stream)
+        {
             Load(stream);
         }
 
@@ -40,7 +42,8 @@ namespace KclLibrary
         /// Initializes a new instance of the <see cref="ObjModel"/> class from the file with the given name.
         /// </summary>
         /// <param name="fileName">The name of the file from which the instance will be loaded.</param>
-        public ObjModel(string fileName) {
+        public ObjModel(string fileName)
+        {
             Load(fileName);
         }
 
@@ -71,7 +74,7 @@ namespace KclLibrary
             List<Triangle> triangles = new List<Triangle>();
             foreach (var mesh in Meshes)
             {
-                 foreach (var face in mesh.Faces)
+                foreach (var face in mesh.Faces)
                 {
                     if (!attributes.Contains(face.CollisionAttribute))
                         attributes.Add(face.CollisionAttribute);
@@ -103,7 +106,8 @@ namespace KclLibrary
         public string[] GetMaterialNameList()
         {
             List<string> materialNames = new List<string>();
-            for (int i = 0; i < Meshes.Count; i++) {
+            for (int i = 0; i < Meshes.Count; i++)
+            {
                 for (int f = 0; f < Meshes[i].Faces.Count; f++)
                 {
                     if (!materialNames.Contains(Meshes[i].Faces[f].Material))
@@ -128,8 +132,7 @@ namespace KclLibrary
 
             ObjMesh currentMesh = new ObjMesh("Mesh");
 
-            HashSet<int> faceHashes = new HashSet<int>();
-
+            List<string> faceDupes = new List<string>();
             using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
             {
                 List<Vector3> Positions = new List<Vector3>();
@@ -159,7 +162,7 @@ namespace KclLibrary
                             continue;
                         case "v":
                             Positions.Add(new Vector3(
-                                Single.Parse(args[1], enusculture), 
+                                Single.Parse(args[1], enusculture),
                                 Single.Parse(args[2], enusculture),
                                 Single.Parse(args[3], enusculture)));
                             continue;
@@ -182,7 +185,7 @@ namespace KclLibrary
                                 string[] vertexArgs = args[i + 1].Split(_vertexSeparators, StringSplitOptions.None);
                                 face.Vertices[i].Position = Positions[Int32.Parse(vertexArgs[0]) - 1];
 
-                                if (float.IsNaN(face.Vertices[i].Position.X) || 
+                                if (float.IsNaN(face.Vertices[i].Position.X) ||
                                     float.IsNaN(face.Vertices[i].Position.Y) ||
                                     float.IsNaN(face.Vertices[i].Position.Z))
                                 {
@@ -200,6 +203,12 @@ namespace KclLibrary
                                 }
                             }
 
+                            string faceStr = face.ToString();
+                            if (faceDupes.Contains(faceStr))
+                                continue;
+
+                            faceDupes.Add(faceStr);
+
                             if (face.Vertices != null)
                                 currentMesh.Faces.Add(face);
                             continue;
@@ -215,7 +224,7 @@ namespace KclLibrary
 
             Console.WriteLine($"FACE COUNT {currentMesh.Faces.Count}");
 
-            faceHashes.Clear();
+            faceDupes.Clear();
 
             if (Meshes.Count == 0) //No object or groups present, use one single mesh
                 Meshes.Add(currentMesh);
@@ -247,8 +256,8 @@ namespace KclLibrary
                             break;
                         case "Ka": //Ambient Color
                             currentMaterial.Ambient = new Vector3(
-                                float.Parse(args[1]), 
-                                float.Parse(args[2]), 
+                                float.Parse(args[1]),
+                                float.Parse(args[2]),
                                 float.Parse(args[3]));
                             break;
                         case "Kd": //Diffuse Color
@@ -279,7 +288,8 @@ namespace KclLibrary
         /// </param>
         public void SaveMTL(Stream stream)
         {
-            using (StreamWriter writer = new StreamWriter(stream, Encoding.Default)) {
+            using (StreamWriter writer = new StreamWriter(stream, Encoding.Default))
+            {
                 foreach (var material in Materials)
                 {
                     writer.WriteLine($"newmtl {material.Name}");
@@ -315,18 +325,22 @@ namespace KclLibrary
                     List<Vector3> normals = new List<Vector3>();
 
                     writer.WriteLine($"o {mesh.Name}");
-                    foreach (var face in mesh.Faces) {
-                        foreach (var v in face.Vertices) {
+                    foreach (var face in mesh.Faces)
+                    {
+                        foreach (var v in face.Vertices)
+                        {
                             string positionKey = v.Position.ToString();
                             string normalKey = v.Normal.ToString();
                             string texCoordKey = v.TexCoord.ToString();
 
-                            if (!positionTable.ContainsKey(positionKey)) {
+                            if (!positionTable.ContainsKey(positionKey))
+                            {
                                 positionTable.Add(positionKey, positons.Count);
                                 positons.Add(v.Position);
                             }
 
-                            if (!normalTable.ContainsKey(normalKey)) {
+                            if (!normalTable.ContainsKey(normalKey))
+                            {
                                 normalTable.Add(normalKey, normals.Count);
                                 normals.Add(v.Normal);
                             }
@@ -341,7 +355,8 @@ namespace KclLibrary
                     string currentMaterial = "";
                     foreach (var face in mesh.Faces.OrderBy(x => x.Material))
                     {
-                        if (face.Material != currentMaterial) {
+                        if (face.Material != currentMaterial)
+                        {
                             currentMaterial = face.Material;
                             writer.WriteLine($"usemtl {currentMaterial}");
                         }
@@ -366,9 +381,9 @@ namespace KclLibrary
         /// Loads the data from the given file.
         /// </summary>
         /// <param name="fileName">The name of the file to load the data from.</param>
-        public void Load(string fileName)
-        {
-            using (FileStream stream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read)) {
+        public void Load(string fileName) {
+            using (FileStream stream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
                 Load(stream);
             }
         }
@@ -381,7 +396,8 @@ namespace KclLibrary
         public void Save(string fileName, bool saveMTL = true) {
             if (saveMTL)
                 SaveMTL(fileName.Replace(".obj", ".mtl"));
-            using (FileStream stream = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.Write)) {
+            using (FileStream stream = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.Write))
+            {
                 Save(stream);
             }
         }
@@ -391,7 +407,8 @@ namespace KclLibrary
         /// </summary>
         /// <param name="fileName">The name of the file to load the data from.</param>
         public void SaveMTL(string fileName) {
-            using (FileStream stream = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.Write)) {
+            using (FileStream stream = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.Write))
+            {
                 SaveMTL(stream);
             }
         }
@@ -440,7 +457,8 @@ namespace KclLibrary
 
         public string Name { get; set; }
 
-        public ObjMesh(string name) {
+        public ObjMesh(string name)
+        {
             Name = name;
             Faces = new List<ObjFace>();
         }
@@ -466,6 +484,13 @@ namespace KclLibrary
         /// </summary>
         public ObjVertex[] Vertices;
 
+        public override string ToString() {
+            string f = CollisionAttribute.ToString();
+            for (int i = 0; i < Vertices.Length; i++)
+                f += Vertices[i].ToString();
+            return f;
+        }
+
         public ObjFace(ObjFace face, ushort value)
         {
             Vertices = face.Vertices;
@@ -473,12 +498,11 @@ namespace KclLibrary
             CollisionAttribute = value;
         }
 
-        public override int GetHashCode()
-        {
-            return base.GetHashCode() ^ 
+        public override int GetHashCode() {
+            return base.GetHashCode() ^
                 Material.GetHashCode() ^
-                Vertices[0].GetHashCode() ^ 
-                Vertices[2].GetHashCode() ^ 
+                Vertices[0].GetHashCode() ^
+                Vertices[2].GetHashCode() ^
                 Vertices[1].GetHashCode();
         }
     }
@@ -505,8 +529,11 @@ namespace KclLibrary
         /// </summary>
         public Vector3 Normal;
 
-        public override int GetHashCode()
-        {
+        public override string ToString() {
+            return $"{Position}_{Normal}";
+        }
+
+        public override int GetHashCode() {
             return base.GetHashCode() ^
                    Position.GetHashCode() ^
                    Normal.GetHashCode();
