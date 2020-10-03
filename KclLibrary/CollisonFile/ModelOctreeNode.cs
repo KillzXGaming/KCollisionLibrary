@@ -57,8 +57,12 @@ namespace KclLibrary
 
         // ---- METHODS (INTERNAL) -------------------------------------------------------------------------------------
 
-        internal void Write(BinaryDataWriter writer)
+        private long keyPos = 0;
+
+        internal void Write(BinaryDataWriter writer, int branchKey = 8)
         {
+            keyPos = writer.Position;
+
             if (Children == null)
             {
                 if (ModelIndex.HasValue)
@@ -76,19 +80,24 @@ namespace KclLibrary
             else
             {
                 // Node is a branch subdivided into 8 children.
-                Key = 8;
                 writer.Write(Key);
             }
         }
 
-        internal void WriteChildren(BinaryDataWriter writer)
+        internal void WriteChildren(BinaryDataWriter writer, ref int branchKey)
         {
             if (Children != null)
             {
+                using (writer.TemporarySeek(keyPos, System.IO.SeekOrigin.Begin)) {
+                    writer.Write(branchKey);
+                    branchKey += 8;
+                }
+
                 foreach (ModelOctreeNode child in Children) 
-                    child.Write(writer);
+                    child.Write(writer, branchKey);
+
                 foreach (ModelOctreeNode child in Children)
-                    child.WriteChildren(writer);
+                    child.WriteChildren(writer, ref branchKey);
             }
         }
     }

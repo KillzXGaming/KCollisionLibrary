@@ -459,11 +459,11 @@ namespace KclLibrary
                                 containedTriangles.Add(triangles[i]);
                         }
 
-                        if (containedTriangles.Count == 0)
-                            Console.WriteLine($"EMPTY SPACE {index} {level}");
-
                         if (containedTriangles.Count >= MaxModelPrismCount)
-                            Console.WriteLine($"Dividing model at {containedTriangles.Count} polygons.");
+                            DebugLogger.WriteLine($"Dividing model at {containedTriangles.Count} polygons.");
+
+                        if (level > 2)
+                            DebugLogger.WriteError($"Warning! Your KCL has over 3 division levels and may fall through!");
 
                         //If the children have too many Prisms, divide into 8 more regions as children.
                         if (containedTriangles.Count >= MaxModelPrismCount)
@@ -626,8 +626,9 @@ namespace KclLibrary
             foreach (ModelOctreeNode rootChild in ModelOctreeRoot) 
                 rootChild.Write(writer);
 
+            int branchKey = 8;
             foreach (ModelOctreeNode rootChild in ModelOctreeRoot)
-                rootChild.WriteChildren(writer);
+                rootChild.WriteChildren(writer, ref branchKey);
 
             // Write the model offsets.
             modelOffsetArrayOffset.Satisfy();
