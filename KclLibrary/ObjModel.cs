@@ -132,7 +132,7 @@ namespace KclLibrary
 
             ObjMesh currentMesh = new ObjMesh("Mesh");
 
-            List<string> faceDupes = new List<string>();
+            Dictionary<ObjFace, int> faceDupes = new Dictionary<ObjFace, int>();
             using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
             {
                 List<Vector3> Positions = new List<Vector3>();
@@ -202,12 +202,6 @@ namespace KclLibrary
                                     face.Vertices[i].Normal = Normals[Int32.Parse(vertexArgs[2]) - 1];
                                 }
                             }
-
-                            string faceStr = face.ToString();
-                            if (faceDupes.Contains(faceStr))
-                                continue;
-
-                            faceDupes.Add(faceStr);
 
                             if (face.Vertices != null)
                                 currentMesh.Faces.Add(face);
@@ -497,14 +491,6 @@ namespace KclLibrary
             Material = face.Material;
             CollisionAttribute = value;
         }
-
-        public override int GetHashCode() {
-            return base.GetHashCode() ^
-                Material.GetHashCode() ^
-                Vertices[0].GetHashCode() ^
-                Vertices[2].GetHashCode() ^
-                Vertices[1].GetHashCode();
-        }
     }
 
     /// <summary>
@@ -531,12 +517,6 @@ namespace KclLibrary
 
         public override string ToString() {
             return $"{Position}_{Normal}";
-        }
-
-        public override int GetHashCode() {
-            return base.GetHashCode() ^
-                   Position.GetHashCode() ^
-                   Normal.GetHashCode();
         }
     }
 
