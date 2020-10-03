@@ -96,8 +96,10 @@ namespace KclLibrary
                 foreach (ModelOctreeNode child in Children) 
                     child.Write(writer, branchKey);
 
+                //Reset the branch offfset to 8 for new children
+                int childBranchKey = 8;
                 foreach (ModelOctreeNode child in Children)
-                    child.WriteChildren(writer, ref branchKey);
+                    child.WriteChildren(writer, ref childBranchKey);
             }
         }
     }
