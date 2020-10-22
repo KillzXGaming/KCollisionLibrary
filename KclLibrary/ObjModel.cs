@@ -132,6 +132,8 @@ namespace KclLibrary
 
             ObjMesh currentMesh = new ObjMesh("Mesh");
 
+            HashSet<string> faceHashes = new HashSet<string>();
+
             Dictionary<ObjFace, int> faceDupes = new Dictionary<ObjFace, int>();
             using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
             {
@@ -177,13 +179,17 @@ namespace KclLibrary
                             if (args.Length != 4)
                                 throw new Exception("Obj must be trianglulated!");
 
+                            int[] indices = new int[3 * 2]; //3 faces, position and normal indices
+
                             // Only support triangles for now.
                             ObjFace face = new ObjFace() { Vertices = new ObjVertex[3] };
                             face.Material = currentMaterial;
                             for (int i = 0; i < face.Vertices.Length; i++)
                             {
                                 string[] vertexArgs = args[i + 1].Split(_vertexSeparators, StringSplitOptions.None);
-                                face.Vertices[i].Position = Positions[Int32.Parse(vertexArgs[0]) - 1];
+                                int positionIndex = Int32.Parse(vertexArgs[0]) - 1;
+
+                                face.Vertices[i].Position = Positions[positionIndex];
 
                                 if (float.IsNaN(face.Vertices[i].Position.X) ||
                                     float.IsNaN(face.Vertices[i].Position.Y) ||
@@ -202,6 +208,12 @@ namespace KclLibrary
                                     face.Vertices[i].Normal = Normals[Int32.Parse(vertexArgs[2]) - 1];
                                 }
                             }
+
+                            string faceStr = face.ToString();
+                            if (faceHashes.Contains(faceStr))
+                                continue;
+
+                            faceHashes.Add(faceStr);
 
                             if (face.Vertices != null)
                                 currentMesh.Faces.Add(face);
