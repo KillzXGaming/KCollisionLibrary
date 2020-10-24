@@ -114,8 +114,25 @@ namespace KclLibrary
         {
             ObjModel objModel = new ObjModel();
 
+            Dictionary<string, ObjMesh> meshes = new Dictionary<string, ObjMesh>();
+
             var mesh = new ObjMesh($"Mesh");
             objModel.Meshes.Add(mesh);
+
+            bool spltByMaterial = true;
+
+            foreach (KCLModel model in Models)
+            {
+                //Distinct check. Some cases prisims have a unique ID
+                //Only split when they don't each have their own.
+                var distinctPrisms = model.Prisms
+                       .GroupBy(p => p.CollisionFlags)
+                       .Select(g => g.First())
+                       .ToList().Count;
+
+                if (distinctPrisms == model.Prisms.Length)
+                    spltByMaterial = false;
+            }
 
             foreach (KCLModel model in Models) {
                 foreach (var face in model.Prisms)
@@ -134,7 +151,16 @@ namespace KclLibrary
                         };
                     }
 
-                    mesh.Faces.Add(objFace);
+                    if (spltByMaterial)
+                    {
+                        if (!meshes.ContainsKey(objFace.Material)) {
+                            meshes.Add(objFace.Material, new ObjMesh(objFace.Material));
+                            objModel.Meshes.Add(meshes[objFace.Material]);
+                        }
+                        meshes[objFace.Material].Faces.Add(objFace);
+                    }
+                    else
+                        mesh.Faces.Add(objFace);
                 }
             }
             return objModel;
