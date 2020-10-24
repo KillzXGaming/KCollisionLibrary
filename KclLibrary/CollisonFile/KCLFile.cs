@@ -116,9 +116,6 @@ namespace KclLibrary
 
             Dictionary<string, ObjMesh> meshes = new Dictionary<string, ObjMesh>();
 
-            var mesh = new ObjMesh($"Mesh");
-            objModel.Meshes.Add(mesh);
-
             bool spltByMaterial = true;
 
             foreach (KCLModel model in Models)
@@ -133,6 +130,10 @@ namespace KclLibrary
                 if (distinctPrisms == model.Prisms.Length)
                     spltByMaterial = false;
             }
+
+            var mesh = new ObjMesh($"Mesh");
+            if (!spltByMaterial)
+                objModel.Meshes.Add(mesh);
 
             foreach (KCLModel model in Models) {
                 foreach (var face in model.Prisms)
