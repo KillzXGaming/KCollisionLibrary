@@ -169,11 +169,15 @@ namespace KclLibrary
                                 Single.Parse(args[3], enusculture)));
                             continue;
                         case "vt":
-                            TexCoords.Add(new Vector2(Single.Parse(args[1], enusculture), Single.Parse(args[2], enusculture)));
+                            TexCoords.Add(new Vector2(
+                                Single.Parse(args[1], enusculture), 
+                                Single.Parse(args[2], enusculture)));
                             continue;
                         case "vn":
-                            Normals.Add(new Vector3(Single.Parse(args[1], enusculture), Single.Parse(args[2], enusculture),
-                                Single.Parse(args[3])));
+                            Normals.Add(new Vector3(
+                                Single.Parse(args[1], enusculture), 
+                                Single.Parse(args[2], enusculture),
+                                Single.Parse(args[3], enusculture)));
                             continue;
                         case "f":
                             if (args.Length != 4)
