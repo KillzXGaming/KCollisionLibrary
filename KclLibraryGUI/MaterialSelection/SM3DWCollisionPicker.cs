@@ -24,7 +24,7 @@ namespace KclLibraryGUI
         public MaterialAttributeFileBase GetAttributeFile(List<Triangle> triangles, bool isBigEndian)
         {
             var matAttributeFile = new MaterialAttributeBymlFile();
-            matAttributeFile.BymlFile = GenerateByaml();
+            matAttributeFile.BymlFile = GenerateByaml(isBigEndian);
             return matAttributeFile;
         }
 
@@ -160,7 +160,7 @@ namespace KclLibraryGUI
             return ids;
         }
 
-        public BymlFileData GenerateByaml()
+        public BymlFileData GenerateByaml(bool isBigEndian)
         {
             var entries = GetCollisionEntries();
             var col = RemoveDuplicateEntries(entries);
@@ -179,8 +179,10 @@ namespace KclLibraryGUI
             }
 
             var byml = new BymlFileData();
-            byml.byteOrder = Syroot.BinaryData.ByteOrder.BigEndian;
-            byml.Version = 1;
+            byml.byteOrder = isBigEndian ? Syroot.BinaryData.ByteOrder.BigEndian :
+                                           Syroot.BinaryData.ByteOrder.LittleEndian;
+            byml.Version = (ushort)(isBigEndian ? 1 : 2);
+
             byml.SupportPaths = false;
             byml.RootNode = root;
 
