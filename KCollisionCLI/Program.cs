@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using KclLibrary;
 
@@ -31,11 +32,54 @@ namespace KCollisionCLI
             public bool IsDS = true;
             public bool IsGCN = true;
             public bool IsWii = true;
+            public bool Is3DS = true;
+
+            public void PrintHelp()
+            {
+                Console.WriteLine("------ KCL Settings ------");
+                Console.WriteLine("-import (imports a given .obj into the collision)");
+                Console.WriteLine("-export (exports a collision as .obj)");
+                Console.WriteLine("Example: KCollisionCLI.exe -import imported.obj model.kcl (injects imported.obj into model.kcl)");
+                Console.WriteLine("Example: KCollisionCLI.exe -export model.kcl exported.obj (exports model.kcl as exported.obj)");
+                Console.WriteLine("------ Material Settings ------");
+                Console.WriteLine("-meshAtt MeshNameHere ## (speicify the mesh name and ## material number to assign to)");
+                Console.WriteLine("-matAtt MaterialNameHere ## (speicify the mesh name and ## material number to assign to)");
+                Console.WriteLine("------ Platforms ------");
+                Console.WriteLine("Wii U outputs default=");
+                Console.WriteLine("-le (save as little endian Switch kcl)");
+                Console.WriteLine("-ds (save as DS kcl)");
+                Console.WriteLine("-wii (save as Wii kcl)");
+                Console.WriteLine("-gcn (save as GCN kcl)");
+                Console.WriteLine("-3ds (save as 3DS kcl)");
+                Console.WriteLine("------ Extra ------");
+                Console.WriteLine("-adv (advanced settings)");
+            }
+
+            public void PrintAdvanced()
+            {
+                Console.WriteLine("-padding ## (specify the amount of padding in octrees)");
+                Console.WriteLine("-max_root ## (specify the max root size)");
+                Console.WriteLine("-min_root ## (specify the min root size)");
+                Console.WriteLine("-min_cube ## (specify the min cube size)");
+                Console.WriteLine("-thickness ## (specify the prism thickness)");
+                Console.WriteLine("-radius ## (specify the sphere radius)");
+            }
         }
 
         static void Main(string[] args)
         {
             var cmdArgs = new CommandLineArguments();
+            if (args.Length == 0 || args.Contains("-h"))
+            {
+                cmdArgs.PrintHelp();
+                return;
+            }
+            if (args.Contains("-adv"))
+            {
+                cmdArgs.PrintAdvanced();
+                return;
+            }
+
             for (int i = 0; i < args.Length; i++)
             {
                 if (args[i] == "-import")     cmdArgs.Import = true;
@@ -59,6 +103,7 @@ namespace KCollisionCLI
                 if (args[i] == "-ds") cmdArgs.IsDS = true;
                 if (args[i] == "-wii") cmdArgs.IsWii = true;
                 if (args[i] == "-gcn") cmdArgs.IsGCN = true;
+                if (args[i] == "-3ds") cmdArgs.Is3DS = true;
 
                 //Octree and prism settings
                 if (args[i] == "-padding") cmdArgs.PaddingSize = float.Parse(args[i + 1]);
@@ -100,6 +145,10 @@ namespace KCollisionCLI
                 if (cmdArgs.IsDS) version = FileVersion.VersionDS;
                 if (cmdArgs.IsWii) version = FileVersion.VersionWII;
                 if (cmdArgs.IsGCN) version = FileVersion.VersionGC;
+                if (cmdArgs.Is3DS) version = FileVersion.VersionWII;
+
+                if (cmdArgs.Is3DS)
+                    cmdArgs.BigEndian = false;
 
                 var obj = new ObjModel(cmdArgs.ObjectFilePath);
                 var kcl = new KCLFile(obj.ToTriangles(), version, cmdArgs.BigEndian, settings);
