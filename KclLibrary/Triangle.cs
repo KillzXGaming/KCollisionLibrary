@@ -49,6 +49,42 @@ namespace KclLibrary
             }
         }
 
+        public bool HasNan()
+        {
+            if (float.IsNaN(Normal.X) ||
+                float.IsNaN(Normal.Y) ||
+                float.IsNaN(Normal.Z))
+                return true;
+
+            for (int i = 0; i < 3; i++)
+            {
+                if (float.IsNaN(Vertices[i].X) ||
+                    float.IsNaN(Vertices[i].Y) ||
+                    float.IsNaN(Vertices[i].Z))
+                        return true;
+            }
+            return false;
+        }
+
+        public bool IsFloorPolygon(Vector3 normal, Vector3 gravity) {
+            return IsFloorPolygonAngle(Vector3.Dot(normal, gravity));
+        }
+
+        public bool IsWallPolygon(Vector3 normal, Vector3 gravity) {
+            return IsWallPolygonAngle(Vector3.Dot(normal, gravity));
+        }
+
+        bool IsWallPolygonAngle(float value) {
+            // 70 degrees -- Math.cos(70*Math.PI/180)
+            return Math.Abs(value) < 0.3420201433256688;
+        }
+
+        bool IsFloorPolygonAngle(float value)
+        {
+            // 70 degrees -- Math.cos(70*Math.PI/180)
+            return value < -0.3420201433256688;
+        }
+
         /// <summary>
         /// The attribute used by a KCLPrisim for handling material flags.
         /// </summary>

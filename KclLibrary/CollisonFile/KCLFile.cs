@@ -140,6 +140,8 @@ namespace KclLibrary
                 {
                     var triangle = model.GetTriangle(face);
                     var normal = triangle.Normal;
+                    if (triangle.HasNan())
+                        continue;
 
                     ObjFace objFace = new ObjFace();
                     objFace.Material = $"COL_{face.CollisionFlags.ToString("X")}";
@@ -335,8 +337,6 @@ namespace KclLibrary
             if (block != null && block.ModelIndex != null)
             {
                 var hit = Models[(int)block.ModelIndex].CheckHit(point);
-              //  if (hit != null) //Convert local space back to world with the current transformation
-                    //      hit.CenterY = Vector3.Transform(new Vector3(0, hit.CenterY, 0), Transform).Y;
                 return hit;
             }
 
@@ -595,7 +595,7 @@ namespace KclLibrary
         private ByteOrder CheckByteOrder(BinaryDataReader reader)
         {
             //KCL has no direct way to determine the byte order. 
-            //Check the first ofset (octree offset) then check if it's pointed to the end of the header.
+            //Check the first offset (octree offset) then check if it's pointed to the end of the header.
             using (reader.TemporarySeek(0, SeekOrigin.Begin))
             {
                 reader.ByteOrder = ByteOrder.BigEndian;

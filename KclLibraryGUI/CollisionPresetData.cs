@@ -82,9 +82,20 @@ namespace KclLibraryGUI
 
             if (name.StartsWith("COL_"))
             {
-                string attribute = name.Replace("COL_", string.Empty); 
-                TypeID = ushort.Parse(attribute, System.Globalization.NumberStyles.HexNumber);
+                string attribute = name.Replace("COL_", string.Empty);
+                if (!IsHexString(attribute))
+                    return;
+
+                ushort value = 0;
+                ushort.TryParse(attribute, System.Globalization.NumberStyles.HexNumber, null, out value);
+                TypeID = value;
             }
+        }
+
+        bool IsHexString(string test)
+        {
+            // For C-style hex notation (0xFF) you can use @"\A\b(0[xX])?[0-9a-fA-F]+\b\Z"
+            return System.Text.RegularExpressions.Regex.IsMatch(test, @"\A\b[0-9a-fA-F]+\b\Z");
         }
     }
 }

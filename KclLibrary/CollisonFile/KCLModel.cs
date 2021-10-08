@@ -187,7 +187,7 @@ namespace KclLibrary
         public KclPrism[] Prisms { get; internal set; }
 
         /// <summary>
-        /// Gets or sets the thickness of the Prisms.
+        /// Gets or sets the thickness of the prisms.
         /// </summary>
         public float PrismThickness { get; set; }
 

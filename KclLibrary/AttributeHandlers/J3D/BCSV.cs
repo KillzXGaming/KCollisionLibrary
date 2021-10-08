@@ -193,8 +193,6 @@ namespace KclLibrary.AttributeHandlers
                 Shift = reader.ReadSByte();
                 Type = (FieldType)reader.ReadByte();
                 Name = BCSVHashHelper.GetHashName(Hash);
-
-                Console.WriteLine($"FIELD {Name} Bitmask {Bitmask} Shift {Shift}");
             }
 
             internal void Write(BinaryDataWriter writer)
